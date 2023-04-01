@@ -1,6 +1,6 @@
 namespace ImageProcessing
 
-open Brahma.FSharp
+(*open Brahma.FSharp
 
 module Main =
     let pathToExamples = "/home/gsv/Projects/TestProj2020/src/ImgProcessing/Examples"
@@ -49,5 +49,32 @@ module Main =
             $"TotalTime = %f{(System.DateTime.Now
                               - start)
                                  .TotalMilliseconds}"
+
+        0
+*)
+
+module Main =
+    let pic = "C:\Users\ivans\Documents\spbsu\pics\japan.jpg"
+
+    // let relativePic = System.IO.Path.GetRelativePath (System.IO.Directory.GetCurrentDirectory(), pic)
+
+    [<EntryPoint>]
+    let main (argv: string array) =
+
+        let filters = [
+            ImageProcessing.gaussianBlurKernel
+            ImageProcessing.gaussianBlurKernel
+            ImageProcessing.edgesKernel
+        ]
+
+        let img = ImageProcessing.loadAs2DArray pic
+        let img2 = ImageProcessing.applyFilter ImageProcessing.motionBlur img
+        // let img = ImageProcessing.applyFilter ImageProcessing.edgesKernel grayscaleImage
+        // let edges =  applyFiltersGPU [ImageProcessing.gaussianBlurKernel; ImageProcessing.edgesKernel] grayscaleImage
+        ImageProcessing.save2DByteArrayAsImage img2 "C:\Users\ivans\Documents\spbsu\pics\japan_running.jpg"
+
+        // let img = ImageProcessing.loadAs2DArray pic
+        // let rotated = ImageProcessing.rotate90Left img
+        // ImageProcessing.save2DByteArrayAsImage rotated "C:\Users\ivans\Documents\spbsu\pics\cat_rotated.jpg"
 
         0

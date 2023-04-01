@@ -25,12 +25,10 @@ let loadAs2DArray (file: string) =
     let res = Array2D.zeroCreate img.Height img.Width
 
     for i in
-        0 .. img.Width
-             - 1 do
+        0 .. img.Width - 1 do
         for j in
-            0 .. img.Height
-                 - 1 do
-            res.[j, i] <- img.Item(i, j).PackedValue
+            0 .. img.Height - 1 do
+            res[j, i] <- img.Item(i, j).PackedValue
 
     printfn $"H=%A{img.Height} W=%A{img.Width}"
     res
@@ -64,7 +62,7 @@ let save2DByteArrayAsImage (imageData: byte[,]) file =
                         0 .. (Array2D.length2 array2D)
                              - 1
                     ] do
-                    yield array2D.[x, y]
+                    yield array2D[x, y]
         }
         |> Array.ofSeq
 
@@ -160,6 +158,8 @@ let edgesKernel =
     |]
     |> Array.map (Array.map float32)
 
+let motionBlur = (Array.init 9 (fun i -> Array.init 9 (fun j -> if i = j then 0.5 else 0.))) |> Array.map (Array.map float32)
+
 let applyFilter (filter: float32[][]) (img: byte[,]) =
     let imgH = img.GetLength 0
     let imgW = img.GetLength 1
@@ -172,28 +172,36 @@ let applyFilter (filter: float32[][]) (img: byte[,]) =
 
     let processPixel px py =
         let dataToHandle = [|
-            for i in
-                px
-                - filterD .. px
-                             + filterD do
-                for j in
-                    py
-                    - filterD .. py
-                                 + filterD do
-                    if
-                        i < 0
-                        || i >= imgH
-                        || j < 0
-                        || j >= imgW
+            for i in px - filterD .. px + filterD do
+                for j in py - filterD .. py + filterD do
+                    if i < 0 || i >= imgH || j < 0 || j >= imgW
                     then
-                        float32 img.[px, py]
+                        float32 img[px, py]
                     else
-                        float32 img.[i, j]
+                        float32 img[i, j]
         |]
 
         Array.fold2 (fun s x y -> s + x * y) 0.0f filter dataToHandle
 
     Array2D.mapi (fun x y _ -> byte (processPixel x y)) img
+
+
+let rotate90Right (img: byte[,]) =
+    let imgH = img.GetLength 0
+    let imgW = img.GetLength 1
+
+    let zeroArr2d = Array2D.zeroCreate imgW imgH
+    let res = Array2D.mapi (fun x y _ -> img[imgH - y - 1, x]) zeroArr2d
+    res
+
+
+let rotate90Left (img: byte[,]) =
+    let imgH = img.GetLength 0
+    let imgW = img.GetLength 1
+
+    let zeroArr2d = Array2D.zeroCreate imgW imgH
+    let res = Array2D.mapi (fun x y _ -> img[y, imgW - x - 1]) zeroArr2d
+    res
 
 
 let applyFilterGPUKernel (clContext: ClContext) localWorkSize =
@@ -206,43 +214,20 @@ let applyFilterGPUKernel (clContext: ClContext) localWorkSize =
                 let ph = p / imgW
                 let mutable res = 0.0f
 
-                for i in
-                    ph
-                    - filterD .. ph
-                                 + filterD do
-                    for j in
-                        pw
-                        - filterD .. pw
-                                     + filterD do
+                for i in ph - filterD .. ph + filterD do
+                    for j in pw - filterD .. pw + filterD do
                         let mutable d = 0uy
 
-                        if
-                            i < 0
-                            || i >= imgH
-                            || j < 0
-                            || j >= imgW
+                        if i < 0 || i >= imgH || j < 0 || j >= imgW
                         then
-                            d <- img.[p]
+                            d <- img[p]
                         else
-                            d <-
-                                img.[i * imgW
-                                     + j]
+                            d <- img[i * imgW + j]
 
-                        let f =
-                            filter.[(i - ph
-                                     + filterD)
-                                    * (2
-                                       * filterD
-                                       + 1)
-                                    + (j - pw
-                                       + filterD)]
+                        let f = filter[(i - ph + filterD) * (2 * filterD + 1) + (j - pw + filterD)]
+                        res <- res + (float32 d) * f
 
-                        res <-
-                            res
-                            + (float32 d)
-                              * f
-
-                result.[p] <- byte (int res)
+                result[p] <- byte (int res)
         @>
 
     let kernel = clContext.Compile kernel
