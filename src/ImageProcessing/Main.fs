@@ -54,7 +54,9 @@ module Main =
 *)
 
 module Main =
-    let pic = "C:\Users\ivans\Documents\spbsu\pics\japan.jpg"
+    let fileName = "egypt_cat"
+
+    let pic = $"C:\Users\ivans\Documents\spbsu\pics\\{fileName}.jpg"
 
     // let relativePic = System.IO.Path.GetRelativePath (System.IO.Directory.GetCurrentDirectory(), pic)
 
@@ -67,11 +69,11 @@ module Main =
             ImageProcessing.edgesKernel
         ]
 
-        let img = ImageProcessing.loadAs2DArray pic
-        let img2 = ImageProcessing.applyFilter ImageProcessing.motionBlur img
+        // let img = ImageProcessing.loadAs2DArray pic
+        // let img2 = ImageProcessing.applyFilter ImageProcessing.outline img
         // let img = ImageProcessing.applyFilter ImageProcessing.edgesKernel grayscaleImage
         // let edges =  applyFiltersGPU [ImageProcessing.gaussianBlurKernel; ImageProcessing.edgesKernel] grayscaleImage
-        ImageProcessing.save2DByteArrayAsImage img2 "C:\Users\ivans\Documents\spbsu\pics\japan_running.jpg"
+        // ImageProcessing.save2DByteArrayAsImage img2 $"C:\Users\ivans\Documents\spbsu\pics\processed\\{fileName}_outline_NOTDIV.jpg"
 
         // let img = ImageProcessing.loadAs2DArray pic
         // let rotated = ImageProcessing.rotate90Left img

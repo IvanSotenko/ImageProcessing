@@ -158,7 +158,31 @@ let edgesKernel =
     |]
     |> Array.map (Array.map float32)
 
-let motionBlur = (Array.init 9 (fun i -> Array.init 9 (fun j -> if i = j then 0.5 else 0.))) |> Array.map (Array.map float32)
+let motionBlurKernel = (Array.init 9 (fun i -> Array.init 9 (fun j -> if i = j then 0.1 else 0.))) |> Array.map (Array.map float32)
+
+let ySobelKernel =
+    [|
+        [|-1; 0; 1|]
+        [|-2; 0; 2|]
+        [|-1; 0; 1|]
+    |] |> Array.map (Array.map (fun x -> (float32 x) /6f))
+
+
+let embossKernel =
+    [|
+        [|-2; -1; 0|]
+        [|-1; 1; 1|]
+        [|0; 1; 2|]
+    |] |> Array.map (Array.map float32)
+
+
+let outlineKernel =
+    [|
+        [|-1; -1; -1|]
+        [|-1; 8; -1|]
+        [|-1; -1; -1|]
+    |] |> Array.map (Array.map float32)
+
 
 let applyFilter (filter: float32[][]) (img: byte[,]) =
     let imgH = img.GetLength 0
