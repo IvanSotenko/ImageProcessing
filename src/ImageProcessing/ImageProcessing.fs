@@ -181,7 +181,7 @@ let outlineKernel =
         [|-1; -1; -1|]
         [|-1; 8; -1|]
         [|-1; -1; -1|]
-    |] |> Array.map (Array.map float32)
+    |] |> Array.map (Array.map (fun x -> (float32 x) /9f))
 
 
 let applyFilter (filter: float32[][]) (img: byte[,]) =
@@ -226,6 +226,15 @@ let rotate90Left (img: byte[,]) =
     let zeroArr2d = Array2D.zeroCreate imgW imgH
     let res = Array2D.mapi (fun x y _ -> img[y, imgW - x - 1]) zeroArr2d
     res
+
+
+let applyFilterToDirectory filter directoryOut directoryIn =
+    let files = System.IO.Directory.GetFiles directoryOut
+
+    for file in files do
+        let image = loadAs2DArray file
+        let processed_image = applyFilter filter image
+        save2DByteArrayAsImage processed_image (directoryIn + "\processed_" + System.IO.Path.GetFileName file)
 
 
 let applyFilterGPUKernel (clContext: ClContext) localWorkSize =

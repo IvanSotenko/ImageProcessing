@@ -54,11 +54,6 @@ module Main =
 *)
 
 module Main =
-    let fileName = "egypt_cat"
-
-    let pic = $"C:\Users\ivans\Documents\spbsu\pics\\{fileName}.jpg"
-
-    // let relativePic = System.IO.Path.GetRelativePath (System.IO.Directory.GetCurrentDirectory(), pic)
 
     [<EntryPoint>]
     let main (argv: string array) =
@@ -68,6 +63,11 @@ module Main =
             ImageProcessing.gaussianBlurKernel
             ImageProcessing.edgesKernel
         ]
+
+        ImageProcessing.applyFilterToDirectory
+            ImageProcessing.outlineKernel
+            "C:\Users\ivans\Documents\spbsu\pics"
+            "C:\Users\ivans\Documents\spbsu\pics\processed"
 
         // let img = ImageProcessing.loadAs2DArray pic
         // let img2 = ImageProcessing.applyFilter ImageProcessing.outline img
