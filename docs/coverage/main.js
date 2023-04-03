@@ -224,9 +224,9 @@ var assemblies = [
   {
     "name": "ImageProcessing",
     "classes": [
-      { "name": "ImageProcessing.ImageProcessing", "rp": "ImageProcessing_ImageProcessing.html", "cl": 0, "ucl": 192, "cal": 192, "tl": 433, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 30, "lch": [], "bch": [], "hc": [] },
-      { "name": "ImageProcessing.Main", "rp": "ImageProcessing_Main.html", "cl": 0, "ucl": 8, "cal": 8, "tl": 97, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 4, "lch": [], "bch": [], "hc": [] },
-      { "name": "ImageProcessing.Streaming", "rp": "ImageProcessing_Streaming.html", "cl": 0, "ucl": 54, "cal": 54, "tl": 80, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 10, "lch": [], "bch": [], "hc": [] },
+      { "name": "ImageProcessing.ImageProcessing", "rp": "ImageProcessing_ImageProcessing.html", "cl": 11, "ucl": 96, "cal": 107, "tl": 218, "ct": "LineCoverage", "mc": "-", "cb": 3, "tb": 30, "lch": [], "bch": [], "hc": [] },
+      { "name": "ImageProcessing.Main", "rp": "ImageProcessing_Main.html", "cl": 0, "ucl": 25, "cal": 25, "tl": 51, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 22, "lch": [], "bch": [], "hc": [] },
+      { "name": "ImageProcessing.Streaming", "rp": "ImageProcessing_Streaming.html", "cl": 0, "ucl": 52, "cal": 52, "tl": 78, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 10, "lch": [], "bch": [], "hc": [] },
     ]},
 ];
 
@@ -240,17 +240,17 @@ var riskHotspotMetrics = [
 
 var riskHotspots = [
   {
-    "assembly": "ImageProcessing", "class": "ImageProcessing.ImageProcessing", "reportPath": "ImageProcessing_ImageProcessing.html", "methodName": "System.Single ImageProcessing.ImageProcessing/processPixel@251::Invoke(System.Int32,System.Int32)", "methodShortName": "Invoke(...)", "fileIndex": 0, "line": 251,
+    "assembly": "ImageProcessing", "class": "ImageProcessing.ImageProcessing", "reportPath": "ImageProcessing_ImageProcessing.html", "methodName": "System.Single ImageProcessing.ImageProcessing/processPixel@102::Invoke(System.Int32,System.Int32)", "methodShortName": "Invoke(...)", "fileIndex": 0, "line": 102,
     "metrics": [
       { "value": 9, "exceeded": false },
       { "value": 64, "exceeded": false },
       { "value": 90, "exceeded": true },
     ]},
   {
-    "assembly": "ImageProcessing", "class": "ImageProcessing.ImageProcessing", "reportPath": "ImageProcessing_ImageProcessing.html", "methodName": "System.Int32 ImageProcessing.ImageProcessing/Pipe #1 input at line 56@57::GenerateNext(System.Collections.Generic.IEnumerable`1<a>&)", "methodShortName": "GenerateNext(...)", "fileIndex": 0, "line": 57,
+    "assembly": "ImageProcessing", "class": "ImageProcessing.Main", "reportPath": "ImageProcessing_Main.html", "methodName": "System.Int32 ImageProcessing.Main::main(System.String[])", "methodShortName": "main(...)", "fileIndex": 0, "line": 23,
     "metrics": [
       { "value": 8, "exceeded": false },
-      { "value": 4, "exceeded": false },
+      { "value": 24, "exceeded": false },
       { "value": 72, "exceeded": true },
     ]},
   {
@@ -261,11 +261,18 @@ var riskHotspots = [
       { "value": 56, "exceeded": true },
     ]},
   {
-    "assembly": "ImageProcessing", "class": "ImageProcessing.ImageProcessing", "reportPath": "ImageProcessing_ImageProcessing.html", "methodName": "System.Byte[0...,0...] ImageProcessing.ImageProcessing::loadAs2DArray(System.String)", "methodShortName": "loadAs2DArray(...)", "fileIndex": 0, "line": 24,
+    "assembly": "ImageProcessing", "class": "ImageProcessing.ImageProcessing", "reportPath": "ImageProcessing_ImageProcessing.html", "methodName": "System.Byte[0...,0...] ImageProcessing.ImageProcessing::loadAs2DArray(System.String)", "methodShortName": "loadAs2DArray(...)", "fileIndex": 0, "line": 22,
     "metrics": [
       { "value": 5, "exceeded": false },
       { "value": 16, "exceeded": false },
       { "value": 30, "exceeded": true },
+    ]},
+  {
+    "assembly": "ImageProcessing", "class": "ImageProcessing.ImageProcessing", "reportPath": "ImageProcessing_ImageProcessing.html", "methodName": "System.Int32 ImageProcessing.ImageProcessing/Pipe #1 input at line 44@45::GenerateNext(System.Collections.Generic.IEnumerable`1<a>&)", "methodShortName": "GenerateNext(...)", "fileIndex": 0, "line": 45,
+    "metrics": [
+      { "value": 8, "exceeded": false },
+      { "value": 4, "exceeded": false },
+      { "value": 21.82, "exceeded": true },
     ]},
 ];
 

@@ -25,6 +25,7 @@ module Main =
         let all = results.GetAllResults()
 
         let dict = Dictionary<string, string>()
+
         let addToDict arg =
             match arg with
             | DirIn path -> dict.Add("DirIn", path)

@@ -14,22 +14,22 @@
 <col />
 </colgroup>
 <tbody>
-<tr><th>Generated on:</th><td>03.04.2023 - 22:02:39</td></tr>
+<tr><th>Generated on:</th><td>04.04.2023 - 0:05:57</td></tr>
 <tr><th>Parser:</th><td>OpenCoverParser</td></tr>
 <tr><th>Assemblies:</th><td>1</td></tr>
 <tr><th>Classes:</th><td>3</td></tr>
 <tr><th>Files:</th><td>3</td></tr>
-<tr><th>Covered lines:</th><td>0</td></tr>
-<tr><th>Uncovered lines:</th><td>254</td></tr>
-<tr><th>Coverable lines:</th><td>254</td></tr>
-<tr><th>Total lines:</th><td>610</td></tr>
-<tr><th>Line coverage:</th><td>0% (0 of 254)</td></tr>
-<tr><th>Covered branches:</th><td>0</td></tr>
-<tr><th>Total branches:</th><td>44</td></tr>
-<tr><th>Branch coverage:</th><td>0% (0 of 44)</td></tr>
-<tr><th>Covered methods:</th><td>0</td></tr>
-<tr><th>Total methods:</th><td>39</td></tr>
-<tr><th>Method coverage:</th><td>0% (0 of 39)</td></tr>
+<tr><th>Covered lines:</th><td>11</td></tr>
+<tr><th>Uncovered lines:</th><td>173</td></tr>
+<tr><th>Coverable lines:</th><td>184</td></tr>
+<tr><th>Total lines:</th><td>347</td></tr>
+<tr><th>Line coverage:</th><td>5.9% (11 of 184)</td></tr>
+<tr><th>Covered branches:</th><td>3</td></tr>
+<tr><th>Total branches:</th><td>62</td></tr>
+<tr><th>Branch coverage:</th><td>4.8% (3 of 62)</td></tr>
+<tr><th>Covered methods:</th><td>5</td></tr>
+<tr><th>Total methods:</th><td>40</td></tr>
+<tr><th>Method coverage:</th><td>12.5% (5 of 40)</td></tr>
 </tbody>
 </table>
 <h1>Risk Hotspots</h1>
@@ -54,15 +54,15 @@
 <tr>
 <td>ImageProcessing</td>
 <td><a href="ImageProcessing_ImageProcessing.html">ImageProcessing.ImageProcessing</a></td>
-<td title="System.Single ImageProcessing.ImageProcessing/processPixel@251::Invoke(System.Int32,System.Int32)"><a href="ImageProcessing_ImageProcessing.html#file0_line251">Invoke(...)</a></td><td class="lightgreen right">9</td>
+<td title="System.Single ImageProcessing.ImageProcessing/processPixel@102::Invoke(System.Int32,System.Int32)"><a href="ImageProcessing_ImageProcessing.html#file0_line102">Invoke(...)</a></td><td class="lightgreen right">9</td>
 <td class="lightgreen right">64</td>
 <td class="lightred right">90</td>
 </tr>
 <tr>
 <td>ImageProcessing</td>
-<td><a href="ImageProcessing_ImageProcessing.html">ImageProcessing.ImageProcessing</a></td>
-<td title="System.Int32 ImageProcessing.ImageProcessing/Pipe #1 input at line 56@57::GenerateNext(System.Collections.Generic.IEnumerable`1&lt;a&gt;&amp;)"><a href="ImageProcessing_ImageProcessing.html#file0_line57">GenerateNext(...)</a></td><td class="lightgreen right">8</td>
-<td class="lightgreen right">4</td>
+<td><a href="ImageProcessing_Main.html">ImageProcessing.Main</a></td>
+<td title="System.Int32 ImageProcessing.Main::main(System.String[])"><a href="ImageProcessing_Main.html#file0_line23">main(...)</a></td><td class="lightgreen right">8</td>
+<td class="lightgreen right">24</td>
 <td class="lightred right">72</td>
 </tr>
 <tr>
@@ -75,9 +75,16 @@
 <tr>
 <td>ImageProcessing</td>
 <td><a href="ImageProcessing_ImageProcessing.html">ImageProcessing.ImageProcessing</a></td>
-<td title="System.Byte[0...,0...] ImageProcessing.ImageProcessing::loadAs2DArray(System.String)"><a href="ImageProcessing_ImageProcessing.html#file0_line24">loadAs2DArray(...)</a></td><td class="lightgreen right">5</td>
+<td title="System.Byte[0...,0...] ImageProcessing.ImageProcessing::loadAs2DArray(System.String)"><a href="ImageProcessing_ImageProcessing.html#file0_line22">loadAs2DArray(...)</a></td><td class="lightgreen right">5</td>
 <td class="lightgreen right">16</td>
 <td class="lightred right">30</td>
+</tr>
+<tr>
+<td>ImageProcessing</td>
+<td><a href="ImageProcessing_ImageProcessing.html">ImageProcessing.ImageProcessing</a></td>
+<td title="System.Int32 ImageProcessing.ImageProcessing/Pipe #1 input at line 44@45::GenerateNext(System.Collections.Generic.IEnumerable`1&lt;a&gt;&amp;)"><a href="ImageProcessing_ImageProcessing.html#file0_line45">GenerateNext(...)</a></td><td class="lightgreen right">8</td>
+<td class="lightgreen right">4</td>
+<td class="lightred right">21.82</td>
 </tr>
 </tbody>
 </table>
@@ -100,14 +107,14 @@
 </colgroup>
 <thead><tr><th>Name</th><th class="right">Covered</th><th class="right">Uncovered</th><th class="right">Coverable</th><th class="right">Total</th><th class="center" colspan="2">Line coverage</th><th class="right">Covered</th><th class="right">Total</th><th class="center" colspan="2">Branch coverage</th></tr></thead>
 <tbody>
-<tr><th>ImageProcessing</th><th class="right">0</th><th class="right">254</th><th class="right">254</th><th class="right">610</th><th title="LineCoverage: 0/254" class="right">0%</th><th><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></th><th class="right">0</th><th class="right">44</th><th class="right" title="0/44">0%</th><th><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></th></tr>
-<tr><td><a href="ImageProcessing_ImageProcessing.html">ImageProcessing.ImageProcessing</a></td><td class="right">0</td><td class="right">192</td><td class="right">192</td><td class="right">433</td><td title="LineCoverage: 0/192" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0</td><td class="right">30</td><td class="right" title="0/30">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
-<tr><td><a href="ImageProcessing_Main.html">ImageProcessing.Main</a></td><td class="right">0</td><td class="right">8</td><td class="right">8</td><td class="right">97</td><td title="LineCoverage: 0/8" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0</td><td class="right">4</td><td class="right" title="0/4">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
-<tr><td><a href="ImageProcessing_Streaming.html">ImageProcessing.Streaming</a></td><td class="right">0</td><td class="right">54</td><td class="right">54</td><td class="right">80</td><td title="LineCoverage: 0/54" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0</td><td class="right">10</td><td class="right" title="0/10">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><th>ImageProcessing</th><th class="right">11</th><th class="right">173</th><th class="right">184</th><th class="right">347</th><th title="LineCoverage: 11/184" class="right">5.9%</th><th><table class="coverage"><tr><td class="green covered6">&nbsp;</td><td class="red covered94">&nbsp;</td></tr></table></th><th class="right">3</th><th class="right">62</th><th class="right" title="3/62">4.8%</th><th><table class="coverage"><tr><td class="green covered5">&nbsp;</td><td class="red covered95">&nbsp;</td></tr></table></th></tr>
+<tr><td><a href="ImageProcessing_ImageProcessing.html">ImageProcessing.ImageProcessing</a></td><td class="right">11</td><td class="right">96</td><td class="right">107</td><td class="right">218</td><td title="LineCoverage: 11/107" class="right">10.2%</td><td><table class="coverage"><tr><td class="green covered10">&nbsp;</td><td class="red covered90">&nbsp;</td></tr></table></td><td class="right">3</td><td class="right">30</td><td class="right" title="3/30">10%</td><td><table class="coverage"><tr><td class="green covered10">&nbsp;</td><td class="red covered90">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="ImageProcessing_Main.html">ImageProcessing.Main</a></td><td class="right">0</td><td class="right">25</td><td class="right">25</td><td class="right">51</td><td title="LineCoverage: 0/25" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0</td><td class="right">22</td><td class="right" title="0/22">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
+<tr><td><a href="ImageProcessing_Streaming.html">ImageProcessing.Streaming</a></td><td class="right">0</td><td class="right">52</td><td class="right">52</td><td class="right">78</td><td title="LineCoverage: 0/52" class="right">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td><td class="right">0</td><td class="right">10</td><td class="right" title="0/10">0%</td><td><table class="coverage"><tr><td class="red covered100">&nbsp;</td></tr></table></td></tr>
 </tbody>
 </table>
 </coverage-info>
-<div class="footer">Generated by: ReportGenerator 4.8.13.0<br />03.04.2023 - 22:02:39<br /><a href="https://github.com/danielpalme/ReportGenerator">GitHub</a> | <a href="http://www.palmmedia.de">www.palmmedia.de</a></div></div></div>
+<div class="footer">Generated by: ReportGenerator 4.8.13.0<br />04.04.2023 - 0:05:58<br /><a href="https://github.com/danielpalme/ReportGenerator">GitHub</a> | <a href="http://www.palmmedia.de">www.palmmedia.de</a></div></div></div>
 <script type="text/javascript">
 /* <![CDATA[ */
 (function() {
