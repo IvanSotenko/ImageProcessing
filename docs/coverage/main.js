@@ -224,8 +224,8 @@ var assemblies = [
   {
     "name": "ImageProcessing",
     "classes": [
-      { "name": "ImageProcessing.ImageProcessing", "rp": "ImageProcessing_ImageProcessing.html", "cl": 0, "ucl": 156, "cal": 156, "tl": 304, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 26, "lch": [], "bch": [], "hc": [] },
-      { "name": "ImageProcessing.Main", "rp": "ImageProcessing_Main.html", "cl": 0, "ucl": 23, "cal": 23, "tl": 53, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 0, "lch": [], "bch": [], "hc": [] },
+      { "name": "ImageProcessing.ImageProcessing", "rp": "ImageProcessing_ImageProcessing.html", "cl": 0, "ucl": 192, "cal": 192, "tl": 433, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 30, "lch": [], "bch": [], "hc": [] },
+      { "name": "ImageProcessing.Main", "rp": "ImageProcessing_Main.html", "cl": 0, "ucl": 8, "cal": 8, "tl": 97, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 4, "lch": [], "bch": [], "hc": [] },
       { "name": "ImageProcessing.Streaming", "rp": "ImageProcessing_Streaming.html", "cl": 0, "ucl": 54, "cal": 54, "tl": 80, "ct": "LineCoverage", "mc": "-", "cb": 0, "tb": 10, "lch": [], "bch": [], "hc": [] },
     ]},
 ];
@@ -240,7 +240,7 @@ var riskHotspotMetrics = [
 
 var riskHotspots = [
   {
-    "assembly": "ImageProcessing", "class": "ImageProcessing.ImageProcessing", "reportPath": "ImageProcessing_ImageProcessing.html", "methodName": "System.Single ImageProcessing.ImageProcessing/processPixel@174::Invoke(System.Int32,System.Int32)", "methodShortName": "Invoke(...)", "fileIndex": 0, "line": 174,
+    "assembly": "ImageProcessing", "class": "ImageProcessing.ImageProcessing", "reportPath": "ImageProcessing_ImageProcessing.html", "methodName": "System.Single ImageProcessing.ImageProcessing/processPixel@251::Invoke(System.Int32,System.Int32)", "methodShortName": "Invoke(...)", "fileIndex": 0, "line": 251,
     "metrics": [
       { "value": 9, "exceeded": false },
       { "value": 64, "exceeded": false },
