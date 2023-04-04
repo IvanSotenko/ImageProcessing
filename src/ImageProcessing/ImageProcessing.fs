@@ -123,7 +123,6 @@ let rotate90Right (img: byte[,]) =
     res
 
 
-
 let rotate90Left (img: byte[,]) =
     let imgH = img.GetLength 0
     let imgW = img.GetLength 1
