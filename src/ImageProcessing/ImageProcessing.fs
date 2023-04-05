@@ -112,11 +112,11 @@ let applyFilter (filter: float32[][]) (img: byte[,]) =
     Array2D.mapi (fun x y _ -> byte (processPixel x y)) img
 
 let rotate90 (img: byte[,]) (clockwise: bool) =
-    
+
     let imgH = img.GetLength 0
     let imgW = img.GetLength 1
     let zeroArr2d = Array2D.zeroCreate imgW imgH
-    
+
     let mapping x y _ =
         if clockwise then
             img[imgH - y - 1, x]
@@ -131,10 +131,12 @@ let loadAs2DArrayFromDirectory directory =
     (Array.map loadAs2DArray files), files
 
 let save2DByteArrayAsImageMany directoryIn (names: string[]) (images: byte[,][]) =
-    let save i image = save2DByteArrayAsImage (System.IO.Path.Combine (directoryIn, names[i])) image
+    let save i image =
+        save2DByteArrayAsImage (System.IO.Path.Combine(directoryIn, names[i])) image
+
     Array.iteri save images
 
- 
+
 let applyFilterGPUKernel (clContext: ClContext) localWorkSize =
 
     let kernel =
