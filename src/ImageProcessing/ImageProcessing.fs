@@ -36,7 +36,7 @@ let loadAsImage (file: string) =
     img.CopyPixelDataTo(Span<byte> buf)
     Image(buf, img.Width, img.Height, System.IO.Path.GetFileName file)
 
-let save2DByteArrayAsImage (imageData: byte[,]) file =
+let save2DByteArrayAsImage file (imageData: byte[,]) =
     let h = imageData.GetLength 0
     let w = imageData.GetLength 1
 
@@ -111,39 +111,30 @@ let applyFilter (filter: float32[][]) (img: byte[,]) =
 
     Array2D.mapi (fun x y _ -> byte (processPixel x y)) img
 
-
-let rotate90Right (img: byte[,]) =
+let rotate90 (img: byte[,]) (clockwise: bool) =
+    
     let imgH = img.GetLength 0
     let imgW = img.GetLength 1
-
     let zeroArr2d = Array2D.zeroCreate imgW imgH
+    
+    let mapping x y _ =
+        if clockwise then
+            img[imgH - y - 1, x]
+        else
+            img[y, imgW - x - 1]
 
-    let res = Array2D.mapi (fun x y _ -> img[imgH - y - 1, x]) zeroArr2d
-
-    res
-
-
-let rotate90Left (img: byte[,]) =
-    let imgH = img.GetLength 0
-    let imgW = img.GetLength 1
-
-    let zeroArr2d = Array2D.zeroCreate imgW imgH
-
-    let res = Array2D.mapi (fun x y _ -> img[y, imgW - x - 1]) zeroArr2d
-
-    res
+    Array2D.mapi mapping zeroArr2d
 
 
-let applyFilterToDirectory filter directoryOut directoryIn =
-    let files = System.IO.Directory.GetFiles directoryOut
+let loadAs2DArrayFromDirectory directory =
+    let files = System.IO.Directory.GetFiles directory
+    (Array.map loadAs2DArray files), files
 
-    for file in files do
-        let image = loadAs2DArray file
-        let processed_image = applyFilter filter image
+let save2DByteArrayAsImageMany directoryIn (names: string[]) (images: byte[,][]) =
+    let save i image = save2DByteArrayAsImage (System.IO.Path.Combine (directoryIn, names[i])) image
+    Array.iteri save images
 
-        save2DByteArrayAsImage processed_image (directoryIn + "\processed_" + System.IO.Path.GetFileName file)
-
-
+ 
 let applyFilterGPUKernel (clContext: ClContext) localWorkSize =
 
     let kernel =
