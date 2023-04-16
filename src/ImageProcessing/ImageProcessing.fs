@@ -1,5 +1,6 @@
 module ImageProcessing.ImageProcessing
 
+open Logging
 open System
 open Brahma.FSharp
 open SixLabors.ImageSharp
@@ -12,7 +13,7 @@ type Image =
     val Height: int
     val Name: string
 
-    new(data, width, height, name) =
+    new(data, height, width, name) =
         {
             Data = data
             Width = width
@@ -45,7 +46,7 @@ let loadAsImage (file: string) =
         )
 
     img.CopyPixelDataTo(Span<byte> buf)
-    Image(buf, img.Width, img.Height, System.IO.Path.GetFileName file)
+    Image(buf, img.Height, img.Width, System.IO.Path.GetFileName file)
 
 let save2DByteArrayAsImage (imageData: byte[,]) file =
     let h = imageData.GetLength 0
@@ -195,6 +196,31 @@ let applyFilter (filter: float32[][]) (img: byte[,]) =
 
     Array2D.mapi (fun x y _ -> byte (processPixel x y)) img
 
+let imageToArr2D (img: Image) = Array2D.init img.Height img.Width (fun i j -> img.Data[i*img.Width + j])
+
+let Arr2DToImage (arr: byte[,]) name =
+    let len1 = Array2D.length1 arr
+    let len2 = Array2D.length2 arr
+    let len = len1*len2
+    Image((Array.init len (fun i -> arr[i/len2, i%len2])), len1, len2, name)
+
+let applyFilter2 (filter: float32[][]) (img: Image) =
+
+    logger.Log(sprintf "applyFilter2: recieved %s" img.Name)
+
+    let arr = imageToArr2D img
+
+    logger.Log(sprintf "applyFilter2: %s - starting to filter" img.Name)
+
+    let processedArr = applyFilter filter arr
+
+    logger.Log(sprintf "applyFilter2: %s - filtered" img.Name)
+
+    let processedImg = Arr2DToImage processedArr img.Name
+
+    logger.Log(sprintf "applyFilter2: %s - Done!" img.Name)
+
+    processedImg
 
 let applyFilterGPUKernel (clContext: ClContext) localWorkSize =
 

@@ -1,5 +1,6 @@
 module ImageProcessing.Streaming
 
+open ImageProcessing.Logging
 open ImageProcessing.ImageProcessing
 
 let listAllFiles dir =
@@ -19,11 +20,12 @@ let imgSaver outDir =
 
             match msg with
             | EOS ch ->
-                printfn "Image saver is finished!"
+                logger.Log("Saver: end of stream")
                 ch.Reply()
             | Img img ->
-                printfn $"Save: %A{img.Name}"
+                logger.Log(sprintf "Saving image: %s" img.Name)
                 saveImage img (outFile img.Name)
+                logger.Log(sprintf "Saved: %s" img.Name)
                 return! loop ()
         }
 
@@ -35,27 +37,27 @@ let imgProcessor filterApplicator (imgSaver: MailboxProcessor<_>) =
     let filter = filterApplicator
 
     MailboxProcessor.Start(fun inbox ->
-        let rec loop cnt = async {
+        let rec loop () = async {
             let! msg = inbox.Receive()
 
             match msg with
             | EOS ch ->
-                printfn "Image processor is ready to finish!"
+                logger.Log("Image processor is ready to finish!")
                 imgSaver.PostAndReply EOS
-                printfn "Image processor is finished!"
+                logger.Log("Image processor is finished!")
                 ch.Reply()
             | Img img ->
-                printfn $"Filter: %A{img.Name}"
+                logger.Log(sprintf "Filtering: %s" img.Name)
                 let filtered = filter img
+                logger.Log(sprintf "Filtered: %s" img.Name)
                 imgSaver.Post(Img filtered)
-                return! loop (not cnt)
+                return! loop ()
         }
 
-        loop true
+        loop ()
     )
 
 let processAllFiles inDir outDir filterApplicators =
-    let mutable cnt = 0
 
     let imgProcessors =
         filterApplicators
@@ -65,16 +67,13 @@ let processAllFiles inDir outDir filterApplicators =
         )
         |> Array.ofList
 
+    printfn $"processors count: {Array.length imgProcessors}"
+
     let filesToProcess = listAllFiles inDir
 
     for file in filesToProcess do
-        //while (imgProcessors |> Array.minBy (fun p -> p.CurrentQueueLength)).CurrentQueueLength > 3 do ()
-        (imgProcessors
-         |> Array.minBy (fun p -> p.CurrentQueueLength))
-            .Post(Img(loadAsImage file))
-
-        cnt <- cnt + 1
+        (imgProcessors |> Array.minBy (fun p -> p.CurrentQueueLength)).Post(Img(loadAsImage file))
+        logger.Log(sprintf "queued: %s" file)
 
     for imgProcessor in imgProcessors do
         imgProcessor.PostAndReply EOS
-//imgSaver.PostAndReply EOS
