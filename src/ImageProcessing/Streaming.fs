@@ -58,6 +58,7 @@ let imgProcessor filterApplicator (imgSaver: MailboxProcessor<_>) =
     )
 
 let processAllFiles inDir outDir filterApplicators =
+    let mutable cnt = 0
 
     let imgProcessors =
         filterApplicators
