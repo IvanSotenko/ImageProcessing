@@ -14,21 +14,21 @@ let imgSaver outDir =
     let outFile (imgName: string) = System.IO.Path.Combine(outDir, imgName)
 
     MailboxProcessor.Start(fun inbox ->
-        let rec loop () =
-            async {
-                let! msg = inbox.Receive()
+        let rec loop () = async {
+            let! msg = inbox.Receive()
 
-                match msg with
-                | EOS ch ->
-                    printfn "Image saver is finished!"
-                    ch.Reply()
-                | Img img ->
-                    printfn $"Save: %A{img.Name}"
-                    saveImage img (outFile img.Name)
-                    return! loop ()
-            }
+            match msg with
+            | EOS ch ->
+                printfn "Image saver is finished!"
+                ch.Reply()
+            | Img img ->
+                printfn $"Save: %A{img.Name}"
+                saveImage img (outFile img.Name)
+                return! loop ()
+        }
 
-        loop ())
+        loop ()
+    )
 
 let imgProcessor filterApplicator (imgSaver: MailboxProcessor<_>) =
 

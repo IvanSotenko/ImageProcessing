@@ -19,7 +19,7 @@
     <None Include="App.config" />
     <Compile Include="ImageProcessing.fs" />
     <Compile Include="Streaming.fs" />
-    <Compile Include="ConsoleParsing.fs" />
+    <Compile Include="CLI.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
