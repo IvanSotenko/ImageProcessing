@@ -29,7 +29,6 @@ let loadAs2DArray (file: string) =
         for j in 0 .. img.Height - 1 do
             res[j, i] <- img.Item(i, j).PackedValue
 
-    printfn $"H=%A{img.Height} W=%A{img.Width}"
     res
 
 let loadAsImage (file: string) =
@@ -43,7 +42,6 @@ let loadAsImage (file: string) =
 let save2DByteArrayAsImage file (imageData: byte[,]) =
     let h = imageData.GetLength 0
     let w = imageData.GetLength 1
-    printfn $"H=%A{h} W=%A{w}"
 
     let flat2Darray array2D =
         seq {
@@ -95,7 +93,27 @@ let outlineKernel =
     |> Array.map (Array.map (fun x -> (float32 x) / 9f))
 
 
+let checkKernelFormat (kernel: float32[][]) =
+    if (Array.isEmpty kernel) then
+        Some(ArgumentException("The filter kernel is empty"))
+    else
+        let isSquare =
+            Array.fold (fun b xs -> b && ((Array.length xs) = kernel.Length)) true kernel
+
+        if not isSquare then
+            Some(ArgumentException("The height and width of the filter kernel do not match"))
+        elif (kernel.Length % 2) = 0 then
+            Some(ArgumentException("The height and width of the filter kernel is even number"))
+        else
+            None
+
+
 let applyFilter (filter: float32[][]) (img: byte[,]) =
+
+    match checkKernelFormat filter with
+    | Some exp -> raise exp
+    | None -> ()
+
     let imgH = img.GetLength 0
     let imgW = img.GetLength 1
 
