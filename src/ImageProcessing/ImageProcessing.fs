@@ -72,7 +72,7 @@ let edgesKernel =
     |> Array.map (Array.map float32)
 
 let motionBlurKernel =
-    (Array.init 9 (fun i -> Array.init 9 (fun j -> if i = j then 0.1 else 0.)))
+    (Array.init 9 (fun i -> Array.init 10 (fun j -> if i = j then 0.1 else 0.)))
     |> Array.map (Array.map float32)
 
 let ySobelKernel =
@@ -90,7 +90,26 @@ let outlineKernel =
     |> Array.map (Array.map (fun x -> (float32 x) / 9f))
 
 
+let checkKernelFormat (kernel: float32[][]) =
+    if (Array.isEmpty kernel) then
+        Some (ArgumentException("The filter kernel is empty"))
+    else
+        let isSquare = Array.fold (fun b xs -> b && ((Array.length xs) = kernel.Length)) true kernel
+        
+        if not isSquare then
+            Some (ArgumentException("The height and width of the filter kernel do not match"))
+        elif (kernel.Length % 2) = 0 then
+            Some (ArgumentException("The height and width of the filter kernel is even number"))
+        else
+            None
+
+
 let applyFilter (filter: float32[][]) (img: byte[,]) =
+    
+    match checkKernelFormat filter with
+    | Some exp -> raise exp
+    | None -> ()
+    
     let imgH = img.GetLength 0
     let imgW = img.GetLength 1
 
@@ -110,6 +129,7 @@ let applyFilter (filter: float32[][]) (img: byte[,]) =
         Array.fold2 (fun s x y -> s + x * y) 0.0f filter dataToHandle
 
     Array2D.mapi (fun x y _ -> byte (processPixel x y)) img
+
 
 let rotate90 (img: byte[,]) (clockwise: bool) =
 
