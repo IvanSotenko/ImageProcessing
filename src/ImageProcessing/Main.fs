@@ -25,31 +25,31 @@ module Processing =
     let applyAllRotationsMany (rotations: Direction list) (images: byte[,][]) =
         Array.map (applyAllRotations rotations) images
 
-    
-    let processing (results: ParseResults<Arguments>)  =
-        
+
+    let processing (results: ParseResults<Arguments>) =
+
         let path = results.GetResult Path
         let pathOut = fst path
         let pathIn = snd path
-        
+
         if (not (results.Contains Filter)) && (not (results.Contains Rotate90)) then
             results.Raise(NoTransformationsException("No transformations were specified"))
+
         else
             let filters = results.GetResults Filter
             let rotations = results.GetResults Rotate90
-            
+
             // checking whether the path corresponds to a directory or file
-            if
-                System.IO.File.Exists pathOut
-            then
+            if System.IO.File.Exists pathOut then
                 let image = loadAs2DArray pathOut
 
                 let image1 = applyAllFilters filters image
                 let image2 = applyAllRotations rotations image1
 
                 save2DByteArrayAsImage pathIn image2
-                
+
                 sprintf "Image \"%s\" was processed successfully." (System.IO.Path.GetFileName pathOut)
+
             else
                 let images, paths = loadAs2DArrayFromDirectory pathOut
 
@@ -62,7 +62,7 @@ module Processing =
                 let images2 = applyAllRotationsMany rotations images1
 
                 save2DByteArrayAsImageMany pathIn names images2
-                
+
                 sprintf "%i images were successfully processed." paths.Length
 
 

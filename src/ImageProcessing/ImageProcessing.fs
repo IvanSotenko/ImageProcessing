@@ -92,24 +92,25 @@ let outlineKernel =
 
 let checkKernelFormat (kernel: float32[][]) =
     if (Array.isEmpty kernel) then
-        Some (ArgumentException("The filter kernel is empty"))
+        Some(ArgumentException("The filter kernel is empty"))
     else
-        let isSquare = Array.fold (fun b xs -> b && ((Array.length xs) = kernel.Length)) true kernel
-        
+        let isSquare =
+            Array.fold (fun b xs -> b && ((Array.length xs) = kernel.Length)) true kernel
+
         if not isSquare then
-            Some (ArgumentException("The height and width of the filter kernel do not match"))
+            Some(ArgumentException("The height and width of the filter kernel do not match"))
         elif (kernel.Length % 2) = 0 then
-            Some (ArgumentException("The height and width of the filter kernel is even number"))
+            Some(ArgumentException("The height and width of the filter kernel is even number"))
         else
             None
 
 
 let applyFilter (filter: float32[][]) (img: byte[,]) =
-    
+
     match checkKernelFormat filter with
     | Some exp -> raise exp
     | None -> ()
-    
+
     let imgH = img.GetLength 0
     let imgW = img.GetLength 1
 
