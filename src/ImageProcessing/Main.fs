@@ -7,10 +7,10 @@ open ImageProcessing
 
 [<AutoOpen>]
 module Processing =
-    let applyAllFilters (filters: Filters list) (image: byte[,]) =
-        List.fold (fun image (filter: Filters) -> applyFilter filter.Kernel image) image filters
+    let applyAllFilters (filters: Filters list) (image: Image) =
+        List.fold (fun img (filter: Filters) -> applyFilter filter.Kernel img) image filters
 
-    let applyAllRotations (rotations: Direction list) (image: byte[,]) =
+    let applyAllRotations (rotations: Direction list) (image: Image) =
         List.fold
             (fun image rotation ->
                 match rotation with
@@ -19,10 +19,10 @@ module Processing =
             image
             rotations
 
-    let applyAllFiltersMany (filters: Filters list) (images: byte[,][]) =
+    let applyAllFiltersMany (filters: Filters list) (images: Image[]) =
         Array.map (applyAllFilters filters) images
 
-    let applyAllRotationsMany (rotations: Direction list) (images: byte[,][]) =
+    let applyAllRotationsMany (rotations: Direction list) (images: Image[]) =
         Array.map (applyAllRotations rotations) images
 
 
@@ -41,29 +41,24 @@ module Processing =
 
             // checking whether the path corresponds to a directory or file
             if System.IO.File.Exists pathOut then
-                let image = loadAs2DArray pathOut
+                let image = loadImage pathOut
 
                 let image1 = applyAllFilters filters image
                 let image2 = applyAllRotations rotations image1
 
-                save2DByteArrayAsImage pathIn image2
+                saveImage image2 pathIn
 
-                sprintf "Image \"%s\" was processed successfully." (System.IO.Path.GetFileName pathOut)
+                sprintf "Image \"%s\" was processed successfully." (image.Name)
 
             else
-                let images, paths = loadAs2DArrayFromDirectory pathOut
-
-                let getNewName (path: string) =
-                    $"processed_{System.IO.Path.GetFileName path}"
-
-                let names = Array.map getNewName paths
+                let images = loadImagesFromDirectory pathOut
 
                 let images1 = applyAllFiltersMany filters images
                 let images2 = applyAllRotationsMany rotations images1
 
-                save2DByteArrayAsImageMany pathIn names images2
+                saveManyImages pathIn images2
 
-                sprintf "%i images were successfully processed." paths.Length
+                sprintf "%i images were successfully processed." images.Length
 
 
 module Main =

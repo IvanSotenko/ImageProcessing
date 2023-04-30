@@ -14,24 +14,13 @@ type Image =
     val Name: string
 
     new(data, height, width, name) =
-        {
-            Data = data
-            Width = width
-            Height = height
-            Name = name
-        }
+        { Data = data
+          Width = width
+          Height = height
+          Name = name }
 
-let loadAs2DArray (file: string) =
-    let img = Image.Load<L8> file
-    let res = Array2D.zeroCreate img.Height img.Width
 
-    for i in 0 .. img.Width - 1 do
-        for j in 0 .. img.Height - 1 do
-            res[j, i] <- img.Item(i, j).PackedValue
-
-    res
-
-let loadAsImage (file: string) =
+let loadImage (file: string) =
     let img = Image.Load<L8> file
 
     let buf = Array.zeroCreate<byte> (img.Width * img.Height)
@@ -39,24 +28,21 @@ let loadAsImage (file: string) =
     img.CopyPixelDataTo(Span<byte> buf)
     Image(buf, img.Height, img.Width, System.IO.Path.GetFileName file)
 
-let save2DByteArrayAsImage file (imageData: byte[,]) =
-    let h = imageData.GetLength 0
-    let w = imageData.GetLength 1
-
-    let flat2Darray array2D =
-        seq {
-            for x in [ 0 .. (Array2D.length1 array2D) - 1 ] do
-                for y in [ 0 .. (Array2D.length2 array2D) - 1 ] do
-                    yield array2D[x, y]
-        }
-        |> Array.ofSeq
-
-    let img = Image.LoadPixelData<L8>(flat2Darray imageData, w, h)
-    img.Save file
-
 let saveImage (image: Image) file =
     let img = Image.LoadPixelData<L8>(image.Data, image.Width, image.Height)
     img.Save file
+
+let loadImagesFromDirectory directory =
+    let files = System.IO.Directory.GetFiles directory
+    Array.map loadImage files
+
+let saveManyImages directory (images: Image[]) =
+    let save (image: Image) =
+        let newName = "processed_" + image.Name
+        saveImage image (System.IO.Path.Combine(directory, newName))
+
+    Array.iter save images
+
 
 let gaussianBlurKernel =
     [| [| 1; 4; 6; 4; 1 |]
@@ -108,81 +94,43 @@ let checkKernelFormat (kernel: float32[][]) =
             None
 
 
-let applyFilter (filter: float32[][]) (img: byte[,]) =
+let applyFilter (filter: float32[][]) (img: Image) =
 
     match checkKernelFormat filter with
     | Some exp -> raise exp
     | None -> ()
 
-    let imgH = img.GetLength 0
-    let imgW = img.GetLength 1
-
     let filterD = (Array.length filter) / 2
-
     let filter = Array.concat filter
 
-    let processPixel px py =
+    let processPixel pi =
+        let px = pi / img.Width
+        let py = pi % img.Width
+
         let dataToHandle =
             [| for i in px - filterD .. px + filterD do
                    for j in py - filterD .. py + filterD do
-                       if i < 0 || i >= imgH || j < 0 || j >= imgW then
-                           float32 img[px, py]
+                       if i < 0 || i >= img.Height || j < 0 || j >= img.Width then
+                           float32 img.Data[pi]
                        else
-                           float32 img[i, j] |]
+                           float32 img.Data[i * img.Width + j] |]
 
         Array.fold2 (fun s x y -> s + x * y) 0.0f filter dataToHandle
 
-    Array2D.mapi (fun x y _ -> byte (processPixel x y)) img
+    Image((Array.mapi (fun i _ -> byte (processPixel i)) img.Data), img.Height, img.Width, img.Name)
 
-let imageToArr2D (img: Image) = Array2D.init img.Height img.Width (fun i j -> img.Data[i*img.Width + j])
 
-let Arr2DToImage (arr: byte[,]) name =
-    let len1 = Array2D.length1 arr
-    let len2 = Array2D.length2 arr
-    let len = len1*len2
-    Image((Array.init len (fun i -> arr[i/len2, i%len2])), len1, len2, name)
+let rotate90 (img: Image) (clockwise: bool) =
 
-let applyFilter2 (filter: float32[][]) (img: Image) =
+    let zeroArr = Array.zeroCreate img.Data.Length
 
-    logger.Log(sprintf "applyFilter2: recieved %s" img.Name)
-
-    let arr = imageToArr2D img
-
-    logger.Log(sprintf "applyFilter2: %s - starting to filter" img.Name)
-
-    let processedArr = applyFilter filter arr
-
-    logger.Log(sprintf "applyFilter2: %s - filtered" img.Name)
-
-    let processedImg = Arr2DToImage processedArr img.Name
-
-    logger.Log(sprintf "applyFilter2: %s - Done!" img.Name)
-
-    processedImg
-let rotate90 (img: byte[,]) (clockwise: bool) =
-
-    let imgH = img.GetLength 0
-    let imgW = img.GetLength 1
-    let zeroArr2d = Array2D.zeroCreate imgW imgH
-
-    let mapping x y _ =
+    let mapping i _ =
         if clockwise then
-            img[imgH - y - 1, x]
+            img.Data[(img.Height - (i % img.Height) - 1) * img.Width + (i / img.Height)]
         else
-            img[y, imgW - x - 1]
+            img.Data[(i % img.Height) * img.Width + (img.Width - (i / img.Height) - 1)]
 
-    Array2D.mapi mapping zeroArr2d
-
-
-let loadAs2DArrayFromDirectory directory =
-    let files = System.IO.Directory.GetFiles directory
-    (Array.map loadAs2DArray files), files
-
-let save2DByteArrayAsImageMany directoryIn (names: string[]) (images: byte[,][]) =
-    let save i image =
-        save2DByteArrayAsImage (System.IO.Path.Combine(directoryIn, names[i])) image
-
-    Array.iteri save images
+    Image((Array.mapi mapping zeroArr), img.Width, img.Height, img.Name)
 
 
 let applyFilterGPUKernel (clContext: ClContext) localWorkSize =

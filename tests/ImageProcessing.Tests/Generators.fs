@@ -3,6 +3,7 @@
 open FsCheck
 open Expecto
 open System
+open ImageProcessing.ImageProcessing
 
 type FilterKernel =
     | FilterKernel of float32[][]
@@ -29,6 +30,13 @@ type EvenSquare2DArray<'A> =
 
 
 let rnd = Random()
+
+
+let Arr2DToImage (name: string) (arr: byte[,]) =
+    let len1 = Array2D.length1 arr
+    let len2 = Array2D.length2 arr
+    let len = len1 * len2
+    Image((Array.init len (fun i -> arr[i / len2, i % len2])), len1, len2, name)
 
 let unmatchedInt (minValue, maxValue) targetInt =
     let values =
@@ -70,5 +78,12 @@ type ImageTypes =
             |> Gen.map EvenSquare2DArray
 
         Gen.sized ker |> Gen.scaleSize (fun s -> 2 * (s / 15)) |> Arb.fromGen
+
+    static member Image() =
+        Arb.generate<byte>
+        |> Gen.array2DOf
+        |> Gen.filter (fun xs -> (Array2D.length1 xs <> 0) && (Array2D.length2 xs <> 0))
+        |> Gen.map2 Arr2DToImage Arb.generate<string>
+        |> Arb.fromGen
 
 let config = { FsCheckConfig.defaultConfig with arbitrary = [ typeof<ImageTypes> ] }
