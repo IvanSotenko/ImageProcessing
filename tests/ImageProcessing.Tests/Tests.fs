@@ -16,7 +16,7 @@ let rotationTests =
               let mutable rotating = img
 
               for i in 1..4 do
-                  rotating <- rotate90 rotating false
+                  rotating <- rotate90 Left rotating
 
               Expect.equal rotating img "The results were different"
 
@@ -27,7 +27,7 @@ let rotationTests =
               let mutable rotating = img
 
               for i in 1..4 do
-                  rotating <- rotate90 rotating true
+                  rotating <- rotate90 Right rotating
 
               Expect.equal rotating img "The results were different" ]
 

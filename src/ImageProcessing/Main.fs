@@ -1,75 +1,58 @@
 namespace ImageProcessing
 
-open Argu
+open System
 open ConsoleParsing
 open ImageProcessing
 
-
 [<AutoOpen>]
-module Processing =
-    let applyAllFilters (filters: Filters list) (image: Image) =
-        List.fold (fun img (filter: Filters) -> applyFilter filter.Kernel img) image filters
+module PrintInfo =
 
-    let applyAllRotations (rotations: Direction list) (image: Image) =
-        List.fold
-            (fun image rotation ->
-                match rotation with
-                | Left -> rotate90 image false
-                | Right -> rotate90 image true)
-            image
-            rotations
+    let finalMessage imagesCount =
+        let message =
+            match imagesCount with
+            | 0 -> "No images were found on the specified path."
+            | 1 -> "1 image was successfully processed."
+            | n when n > 1 -> $"{n} images were successfully processed."
+            | _ -> raise (ArgumentException("The count of images is negative."))
 
-    let applyAllFiltersMany (filters: Filters list) (images: Image[]) =
-        Array.map (applyAllFilters filters) images
-
-    let applyAllRotationsMany (rotations: Direction list) (images: Image[]) =
-        Array.map (applyAllRotations rotations) images
+        printfn $"{message}"
 
 
-    let processing (results: ParseResults<Arguments>) =
+module Main =
+    open Argu
+
+    let getApplicators filters rotations =
+        List.append
+            (List.map (fun (filter: Filters) -> applyFilter filter.Kernel) filters)
+            (List.map (fun (direction: Direction) -> rotate90 direction) rotations)
+
+
+    [<EntryPoint>]
+    let main (argv: string array) =
+
+        let parser = ArgumentParser.Create<Arguments>(programName = "ImageProcessing")
+        let results = parser.Parse argv
 
         let path = results.GetResult Path
         let pathOut = fst path
         let pathIn = snd path
 
-        if (not (results.Contains Filter)) && (not (results.Contains Rotate90)) then
-            results.Raise(NoTransformationsException("No transformations were specified"))
-
-        else
-            let filters = results.GetResults Filter
-            let rotations = results.GetResults Rotate90
-
-            // checking whether the path corresponds to a directory or file
-            if System.IO.File.Exists pathOut then
-                let image = loadImage pathOut
-
-                let image1 = applyAllFilters filters image
-                let image2 = applyAllRotations rotations image1
-
-                saveImage image2 pathIn
-
-                sprintf "Image \"%s\" was processed successfully." (image.Name)
+        let imgCount =
+            if (not (results.Contains Filter)) && (not (results.Contains Rotate)) then
+                results.Raise(NoTransformationsException("No transformations were specified"))
 
             else
-                let images = loadImagesFromDirectory pathOut
 
-                let images1 = applyAllFiltersMany filters images
-                let images2 = applyAllRotationsMany rotations images1
+                let method = results.GetResult Method
+                let filters = results.GetResults Filter
+                let rotations = results.GetResults Rotate
 
-                saveManyImages pathIn images2
+                let applicators = getApplicators filters rotations
 
-                sprintf "%i images were successfully processed." images.Length
+                match method with
+                | Seq -> processImagesSequentially pathOut pathIn applicators
+                | Agent -> 0
 
-
-module Main =
-
-    [<EntryPoint>]
-    let main (argv: string array) =
-
-        let parser = ArgumentParser.Create<Arguments>(programName = "ImageProcessing.exe")
-        let results = parser.Parse argv
-
-        let response = processing results
-        printfn $"{response}"
+        finalMessage imgCount
 
         0

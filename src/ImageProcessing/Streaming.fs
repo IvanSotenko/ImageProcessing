@@ -11,6 +11,8 @@ type msg =
     | Img of Image
     | EOS of AsyncReplyChannel<unit>
 
+let logger = Logger()
+
 let imgSaver outDir =
     let outFile (imgName: string) = System.IO.Path.Combine(outDir, imgName)
 
@@ -41,9 +43,8 @@ let imgProcessor filterApplicator (imgSaver: MailboxProcessor<_>) =
 
                 match msg with
                 | EOS ch ->
-                    logger.Log("Image processor is ready to finish!")
                     imgSaver.PostAndReply EOS
-                    logger.Log("Image processor is finished!")
+                    logger.Log("imgProcessor: end of stream")
                     ch.Reply()
                 | Img img ->
                     logger.Log(sprintf "Filtering: %s" img.Name)

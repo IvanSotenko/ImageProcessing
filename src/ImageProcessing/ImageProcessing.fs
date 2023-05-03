@@ -1,6 +1,6 @@
 module ImageProcessing.ImageProcessing
 
-open Logging
+
 open System
 open Brahma.FSharp
 open SixLabors.ImageSharp
@@ -19,6 +19,54 @@ type Image =
           Height = height
           Name = name }
 
+type Direction =
+    | Left
+    | Right
+
+
+type Filters =
+    | GaussianBlur
+    | Edges
+    | MotionBlur
+    | YSobel
+    | Emboss
+    | OutLine
+
+    member this.Kernel =
+        match this with
+
+        | GaussianBlur ->
+            [| [| 1; 4; 6; 4; 1 |]
+               [| 4; 16; 24; 16; 4 |]
+               [| 6; 24; 36; 24; 6 |]
+               [| 4; 16; 24; 16; 4 |]
+               [| 1; 4; 6; 4; 1 |] |]
+            |> Array.map (Array.map (fun x -> (float32 x) / 256.0f))
+
+        | Edges ->
+            [| [| 0; 0; -1; 0; 0 |]
+               [| 0; 0; -1; 0; 0 |]
+               [| 0; 0; 2; 0; 0 |]
+               [| 0; 0; 0; 0; 0 |]
+               [| 0; 0; 0; 0; 0 |] |]
+            |> Array.map (Array.map float32)
+
+        | MotionBlur ->
+            (Array.init 9 (fun i -> Array.init 9 (fun j -> if i = j then 0.1 else 0.)))
+            |> Array.map (Array.map float32)
+
+        | YSobel ->
+            [| [| -1; 0; 1 |]; [| -2; 0; 2 |]; [| -1; 0; 1 |] |]
+            |> Array.map (Array.map (fun x -> (float32 x) / 6f))
+
+        | Emboss ->
+            [| [| -2; -1; 0 |]; [| -1; 1; 1 |]; [| 0; 1; 2 |] |]
+            |> Array.map (Array.map float32)
+
+        | OutLine ->
+            [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
+            |> Array.map (Array.map (fun x -> (float32 x) / 9f))
+
 
 let loadImage (file: string) =
     let img = Image.Load<L8> file
@@ -32,51 +80,27 @@ let saveImage (image: Image) file =
     let img = Image.LoadPixelData<L8>(image.Data, image.Width, image.Height)
     img.Save file
 
-let loadImagesFromDirectory directory =
-    let files = System.IO.Directory.GetFiles directory
-    Array.map loadImage files
+let allowedImageFormats =
+    Set.ofArray [| ".gif"; ".png"; ".webp"; ".pbm"; ".tiff"; ".bmp"; ".jpeg"; ".jpg"; ".tga" |]
 
-let saveManyImages directory (images: Image[]) =
+let loadImages pathOut =
+    let imgFiles =
+        if System.IO.File.Exists pathOut then
+            Array.singleton pathOut
+        else
+            let files = System.IO.Directory.GetFiles pathOut
+
+            files
+            |> Array.filter (fun file -> allowedImageFormats.Contains(System.IO.Path.GetExtension file))
+
+    Array.map loadImage imgFiles
+
+let saveImages directory (images: Image[]) =
     let save (image: Image) =
         let newName = "processed_" + image.Name
         saveImage image (System.IO.Path.Combine(directory, newName))
 
     Array.iter save images
-
-
-let gaussianBlurKernel =
-    [| [| 1; 4; 6; 4; 1 |]
-       [| 4; 16; 24; 16; 4 |]
-       [| 6; 24; 36; 24; 6 |]
-       [| 4; 16; 24; 16; 4 |]
-       [| 1; 4; 6; 4; 1 |] |]
-    |> Array.map (Array.map (fun x -> (float32 x) / 256.0f))
-
-let edgesKernel =
-    [| [| 0; 0; -1; 0; 0 |]
-       [| 0; 0; -1; 0; 0 |]
-       [| 0; 0; 2; 0; 0 |]
-       [| 0; 0; 0; 0; 0 |]
-       [| 0; 0; 0; 0; 0 |] |]
-    |> Array.map (Array.map float32)
-
-let motionBlurKernel =
-    (Array.init 9 (fun i -> Array.init 9 (fun j -> if i = j then 0.1 else 0.)))
-    |> Array.map (Array.map float32)
-
-let ySobelKernel =
-    [| [| -1; 0; 1 |]; [| -2; 0; 2 |]; [| -1; 0; 1 |] |]
-    |> Array.map (Array.map (fun x -> (float32 x) / 6f))
-
-
-let embossKernel =
-    [| [| -2; -1; 0 |]; [| -1; 1; 1 |]; [| 0; 1; 2 |] |]
-    |> Array.map (Array.map float32)
-
-
-let outlineKernel =
-    [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
-    |> Array.map (Array.map (fun x -> (float32 x) / 9f))
 
 
 let checkKernelFormat (kernel: float32[][]) =
@@ -120,17 +144,29 @@ let applyFilter (filter: float32[][]) (img: Image) =
     Image((Array.mapi (fun i _ -> byte (processPixel i)) img.Data), img.Height, img.Width, img.Name)
 
 
-let rotate90 (img: Image) (clockwise: bool) =
+let rotate90 (direction: Direction) (img: Image) =
 
     let zeroArr = Array.zeroCreate img.Data.Length
 
     let mapping i _ =
-        if clockwise then
-            img.Data[(img.Height - (i % img.Height) - 1) * img.Width + (i / img.Height)]
-        else
-            img.Data[(i % img.Height) * img.Width + (img.Width - (i / img.Height) - 1)]
+        match direction with
+        | Right -> img.Data[(img.Height - (i % img.Height) - 1) * img.Width + (i / img.Height)]
+        | Left -> img.Data[(i % img.Height) * img.Width + (img.Width - (i / img.Height) - 1)]
 
     Image((Array.mapi mapping zeroArr), img.Width, img.Height, img.Name)
+
+
+let processImagesSequentially pathOut pathIn applicators =
+
+    let images = loadImages pathOut
+
+    let applyAll image =
+        List.fold (fun img applicator -> applicator img) image applicators
+
+    let processedImages = images |> Array.map applyAll
+
+    saveImages pathIn processedImages
+    processedImages.Length
 
 
 let applyFilterGPUKernel (clContext: ClContext) localWorkSize =
