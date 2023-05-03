@@ -3,6 +3,7 @@ namespace ImageProcessing
 open System
 open ConsoleParsing
 open ImageProcessing
+open Streaming
 
 [<AutoOpen>]
 module PrintInfo =
@@ -32,27 +33,31 @@ module Main =
 
         let parser = ArgumentParser.Create<Arguments>(programName = "ImageProcessing")
         let results = parser.Parse argv
-
+        
         let path = results.GetResult Path
         let pathOut = fst path
         let pathIn = snd path
-
+        
         let imgCount =
             if (not (results.Contains Filter)) && (not (results.Contains Rotate)) then
                 results.Raise(NoTransformationsException("No transformations were specified"))
-
+        
             else
-
-                let method = results.GetResult Method
                 let filters = results.GetResults Filter
                 let rotations = results.GetResults Rotate
-
+                
                 let applicators = getApplicators filters rotations
-
-                match method with
-                | Seq -> processImagesSequentially pathOut pathIn applicators
-                | Agent -> 0
-
+                
+                if results.Contains Seq then
+                    processImagesSequentially pathOut pathIn applicators
+                elif results.Contains Agent then
+                    let agentArgs = results.GetResult Agent
+                    processImagesUsingAgents pathOut pathIn applicators agentArgs
+                elif results.Contains AgentParallel then
+                    0
+                else
+                    failwith "No method specified"
+        
         finalMessage imgCount
-
+        
         0

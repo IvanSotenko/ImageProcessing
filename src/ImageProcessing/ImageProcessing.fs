@@ -83,17 +83,20 @@ let saveImage (image: Image) file =
 let allowedImageFormats =
     Set.ofArray [| ".gif"; ".png"; ".webp"; ".pbm"; ".tiff"; ".bmp"; ".jpeg"; ".jpg"; ".tga" |]
 
-let loadImages pathOut =
-    let imgFiles =
-        if System.IO.File.Exists pathOut then
-            Array.singleton pathOut
-        else
-            let files = System.IO.Directory.GetFiles pathOut
 
-            files
-            |> Array.filter (fun file -> allowedImageFormats.Contains(System.IO.Path.GetExtension file))
+let getImagePaths dir =
+    if System.IO.File.Exists dir then
+        Array.singleton dir
+    else
+        let files = System.IO.Directory.GetFiles dir
 
+        files
+        |> Array.filter (fun file -> allowedImageFormats.Contains(System.IO.Path.GetExtension file))
+    
+let loadImages dir =
+    let imgFiles = getImagePaths dir
     Array.map loadImage imgFiles
+
 
 let saveImages directory (images: Image[]) =
     let save (image: Image) =
