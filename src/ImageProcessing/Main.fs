@@ -22,6 +22,9 @@ module PrintInfo =
 module Main =
     open Argu
 
+    let defaultProcessMethod = Seq
+
+
     let getApplicators filters rotations =
         List.append
             (List.map (fun (filter: Filters) -> applyFilter filter.Kernel) filters)
@@ -33,31 +36,32 @@ module Main =
 
         let parser = ArgumentParser.Create<Arguments>(programName = "ImageProcessing")
         let results = parser.Parse argv
-        
+
         let path = results.GetResult Path
         let pathOut = fst path
         let pathIn = snd path
-        
+
         let imgCount =
             if (not (results.Contains Filter)) && (not (results.Contains Rotate)) then
                 results.Raise(NoTransformationsException("No transformations were specified"))
-        
+
             else
                 let filters = results.GetResults Filter
                 let rotations = results.GetResults Rotate
-                
+
+                let method =
+                    if results.Contains Method then
+                        (results.GetResult Method).GetAllResults()[0]
+                    else
+                        defaultProcessMethod
+
                 let applicators = getApplicators filters rotations
-                
-                if results.Contains Seq then
-                    processImagesSequentially pathOut pathIn applicators
-                elif results.Contains Agent then
-                    let agentArgs = results.GetResult Agent
-                    processImagesUsingAgents pathOut pathIn applicators agentArgs
-                elif results.Contains AgentParallel then
-                    0
-                else
-                    failwith "No method specified"
-        
+
+                match method with
+                | Seq -> processImagesSequentially pathOut pathIn applicators
+                | Agent args -> processImagesUsingAgents pathOut pathIn applicators args
+                | AgentParallel -> 0
+
         finalMessage imgCount
-        
+
         0

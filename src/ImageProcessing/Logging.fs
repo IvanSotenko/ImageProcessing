@@ -14,4 +14,4 @@ type Logger() =
 
             messageLoop ())
 
-    member this.Log (msg: string) = agent.Post msg
+    member this.Log(msg: string) = agent.Post msg

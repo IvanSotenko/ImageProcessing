@@ -92,7 +92,7 @@ let getImagePaths dir =
 
         files
         |> Array.filter (fun file -> allowedImageFormats.Contains(System.IO.Path.GetExtension file))
-    
+
 let loadImages dir =
     let imgFiles = getImagePaths dir
     Array.map loadImage imgFiles
@@ -100,7 +100,7 @@ let loadImages dir =
 
 let saveImages directory (images: Image[]) =
     let save (image: Image) =
-        let newName = "processed_" + image.Name
+        let newName = "proc_" + image.Name
         saveImage image (System.IO.Path.Combine(directory, newName))
 
     Array.iter save images
