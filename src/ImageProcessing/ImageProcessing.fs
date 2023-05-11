@@ -76,7 +76,7 @@ let loadImage (file: string) =
     img.CopyPixelDataTo(Span<byte> buf)
     Image(buf, img.Height, img.Width, System.IO.Path.GetFileName file)
 
-let saveImage (image: Image) file =
+let saveImage file (image: Image) =
     let img = Image.LoadPixelData<L8>(image.Data, image.Width, image.Height)
     img.Save file
 
@@ -101,7 +101,7 @@ let loadImages dir =
 let saveImages directory (images: Image[]) =
     let save (image: Image) =
         let newName = "proc_" + image.Name
-        saveImage image (System.IO.Path.Combine(directory, newName))
+        saveImage (System.IO.Path.Combine(directory, newName)) image
 
     Array.iter save images
 
@@ -159,16 +159,16 @@ let rotate90 (direction: Direction) (img: Image) =
     Image((Array.mapi mapping zeroArr), img.Width, img.Height, img.Name)
 
 
-let processImagesSequentially pathOut pathIn applicators =
+let processImagesSequentially pathIn pathOut applicators =
 
-    let images = loadImages pathOut
+    let images = loadImages pathIn
 
     let applyAll image =
         List.fold (fun img applicator -> applicator img) image applicators
 
     let processedImages = images |> Array.map applyAll
 
-    saveImages pathIn processedImages
+    saveImages pathOut processedImages
     processedImages.Length
 
 

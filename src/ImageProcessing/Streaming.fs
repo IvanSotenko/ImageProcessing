@@ -19,10 +19,17 @@ let listAllFiles dir =
     let files = System.IO.Directory.GetFiles dir
     List.ofArray files
 
-type msg =
+
+type stringMsg =
+    | Str of string
+    | EOS of AsyncReplyChannel<unit>
+    
+    
+type imageMsg =
     | Img of Image
     | EOS of AsyncReplyChannel<unit>
-
+    
+    
 let logger = Logger()
 
 let imgSaver outDir name =
@@ -42,7 +49,7 @@ let imgSaver outDir name =
 
                 | Img img ->
                     logger.Log($"{name}: saving image {img.Name}")
-                    saveImage img (outFile img.Name)
+                    saveImage (outFile img.Name) img
                     logger.Log($"{name}: {img.Name} is saved")
                     return! loop ()
             }
@@ -72,10 +79,33 @@ let imgProcessor filterApplicator (nextAgent: MailboxProcessor<_>) name =
 
         loop ())
 
+let readProcessAndSave outDir filterApplicator name =
 
-let createProcessorChain (applicators: (Image -> Image)[]) outDir : MailboxProcessor<msg>[] =
+    MailboxProcessor.Start(fun (inbox: MailboxProcessor<stringMsg>) ->
+        let rec loop () =
+            async {
+                let! msg = inbox.Receive()
+                
+                match msg with
+                | stringMsg.EOS ch ->
+                    logger.Log($"{name}: end of stream.")
+                    ch.Reply()
+                    
+                | Str path ->
+                    logger.Log($"{name}: File is reading - {path}.")
+                    let img = loadImage path
+                    logger.Log($"{name}: processing image {img.Name}.")
+                    let processedImg = filterApplicator img
+                    logger.Log($"{name}: saving image {img.Name}")
+                    saveImages outDir (Array.singleton processedImg)
+                    return! loop ()
+                }
+        loop ())
+    
+    
+let createProcessorChain (applicators: (Image -> Image)[]) outDir : MailboxProcessor<imageMsg>[] =
 
-    let rec loop (processors: MailboxProcessor<msg>[]) iterNum =
+    let rec loop (processors: MailboxProcessor<imageMsg>[]) iterNum =
         match processors.Length with
         | n when n = applicators.Length -> processors
         | 0 ->
@@ -119,7 +149,6 @@ let processImagesUsingAgents inDir outDir applicators (args: ParseResults<AgentA
 
         else
             let imagesPaths = getImagePaths inDir
-
             imagesPaths
             |> Array.iter (fun path ->
                 let image = loadImage path
@@ -146,7 +175,6 @@ let processImagesUsingAgents inDir outDir applicators (args: ParseResults<AgentA
 
         else
             let imagesPaths = getImagePaths inDir
-
             imagesPaths
             |> Array.iter (fun path ->
                 let image = loadImage path
@@ -154,3 +182,16 @@ let processImagesUsingAgents inDir outDir applicators (args: ParseResults<AgentA
 
             processor.PostAndReply(EOS)
             imagesPaths.Length
+
+
+let experimental inDir outDir applicators =
+    let applicator image =
+        List.fold (fun img applicator -> applicator img) image applicators
+        
+    let imagesPaths = getImagePaths inDir
+    let processors = Array.init imagesPaths.Length (fun i -> readProcessAndSave outDir applicator $"ImageProcessor{i}")
+    
+    processors |> Array.iteri (fun i proc -> proc.Post(Str imagesPaths[i]))
+    processors |> Array.iter (fun proc -> proc.PostAndReply(stringMsg.EOS))
+    
+    imagesPaths.Length

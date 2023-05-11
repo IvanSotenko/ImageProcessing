@@ -8,7 +8,7 @@ type Logger() =
             let rec messageLoop () =
                 async {
                     let! msg = inbox.Receive()
-                    printfn "%s" msg
+                    printfn $"{msg}"
                     return! messageLoop ()
                 }
 

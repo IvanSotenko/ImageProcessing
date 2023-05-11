@@ -38,8 +38,8 @@ module Main =
         let results = parser.Parse argv
 
         let path = results.GetResult Path
-        let pathOut = fst path
-        let pathIn = snd path
+        let pathIn = fst path
+        let pathOut = snd path
 
         let imgCount =
             if (not (results.Contains Filter)) && (not (results.Contains Rotate)) then
@@ -58,9 +58,9 @@ module Main =
                 let applicators = getApplicators filters rotations
 
                 match method with
-                | Seq -> processImagesSequentially pathOut pathIn applicators
-                | Agent args -> processImagesUsingAgents pathOut pathIn applicators args
-                | AgentParallel -> 0
+                | Seq -> processImagesSequentially pathIn pathOut applicators
+                | Agent args -> processImagesUsingAgents pathIn pathOut applicators args
+                | AgentParallel -> experimental pathIn pathOut applicators
 
         finalMessage imgCount
 
