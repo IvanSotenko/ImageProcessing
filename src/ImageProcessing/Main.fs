@@ -1,53 +1,80 @@
 namespace ImageProcessing
 
-open Brahma.FSharp
+open Argu
+open ConsoleParsing
+open ImageProcessing
+
+
+[<AutoOpen>]
+module Processing =
+    let applyAllFilters (filters: Filters list) (image: byte[,]) =
+        List.fold (fun image (filter: Filters) -> applyFilter filter.Kernel image) image filters
+
+    let applyAllRotations (rotations: Direction list) (image: byte[,]) =
+        List.fold
+            (fun image rotation ->
+                match rotation with
+                | Left -> rotate90 image false
+                | Right -> rotate90 image true)
+            image
+            rotations
+
+    let applyAllFiltersMany (filters: Filters list) (images: byte[,][]) =
+        Array.map (applyAllFilters filters) images
+
+    let applyAllRotationsMany (rotations: Direction list) (images: byte[,][]) =
+        Array.map (applyAllRotations rotations) images
+
+
+    let processing (results: ParseResults<Arguments>) =
+
+        let path = results.GetResult Path
+        let pathOut = fst path
+        let pathIn = snd path
+
+        if (not (results.Contains Filter)) && (not (results.Contains Rotate90)) then
+            results.Raise(NoTransformationsException("No transformations were specified"))
+
+        else
+            let filters = results.GetResults Filter
+            let rotations = results.GetResults Rotate90
+
+            // checking whether the path corresponds to a directory or file
+            if System.IO.File.Exists pathOut then
+                let image = loadAs2DArray pathOut
+
+                let image1 = applyAllFilters filters image
+                let image2 = applyAllRotations rotations image1
+
+                save2DByteArrayAsImage pathIn image2
+
+                sprintf "Image \"%s\" was processed successfully." (System.IO.Path.GetFileName pathOut)
+
+            else
+                let images, paths = loadAs2DArrayFromDirectory pathOut
+
+                let getNewName (path: string) =
+                    $"processed_{System.IO.Path.GetFileName path}"
+
+                let names = Array.map getNewName paths
+
+                let images1 = applyAllFiltersMany filters images
+                let images2 = applyAllRotationsMany rotations images1
+
+                save2DByteArrayAsImageMany pathIn names images2
+
+                sprintf "%i images were successfully processed." paths.Length
+
 
 module Main =
-    let pathToExamples = "/home/gsv/Projects/TestProj2020/src/ImgProcessing/Examples"
-    let inputFolder = System.IO.Path.Combine(pathToExamples, "input")
-
-    let demoFile =
-        System.IO.Path.Combine(inputFolder, "armin-djuhic-ohc29QXbS-s-unsplash.jpg")
 
     [<EntryPoint>]
     let main (argv: string array) =
-        let nvidiaDevice =
-            ClDevice.GetAvailableDevices(platform = Platform.Nvidia)
-            |> Seq.head
 
-        let intelDevice =
-            ClDevice.GetAvailableDevices(platform = Platform.Intel)
-            |> Seq.head
-        //ClDevice.GetFirstAppropriateDevice()
-        //printfn $"Device: %A{device.Name}"
+        let parser = ArgumentParser.Create<Arguments>(programName = "ImageProcessing.exe")
+        let results = parser.Parse argv
 
-        let nvContext = ClContext(nvidiaDevice)
-        let applyFiltersOnNvGPU = ImageProcessing.applyFiltersGPU nvContext 64
-
-        let intelContext = ClContext(intelDevice)
-        let applyFiltersOnIntelGPU = ImageProcessing.applyFiltersGPU intelContext 64
-
-        let filters = [
-            ImageProcessing.gaussianBlurKernel
-            ImageProcessing.gaussianBlurKernel
-            ImageProcessing.edgesKernel
-        ]
-
-        //let grayscaleImage = ImageProcessing.loadAs2DArray demoFile
-        //let blur = ImageProcessing.applyFilter ImageProcessing.gaussianBlurKernel grayscaleImage
-        //let edges = ImageProcessing.applyFilter ImageProcessing.edgesKernel blur
-        //let edges =  applyFiltersGPU [ImageProcessing.gaussianBlurKernel; ImageProcessing.edgesKernel] grayscaleImage
-        //ImageProcessing.save2DByteArrayAsImage edges "../../../../../out/demo_grayscale.jpg"
-        let start = System.DateTime.Now
-
-        Streaming.processAllFiles inputFolder "../../../../../out/" [
-            applyFiltersOnNvGPU filters
-            applyFiltersOnIntelGPU filters
-        ]
-
-        printfn
-            $"TotalTime = %f{(System.DateTime.Now
-                              - start)
-                                 .TotalMilliseconds}"
+        let response = processing results
+        printfn $"{response}"
 
         0
