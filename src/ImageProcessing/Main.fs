@@ -65,7 +65,7 @@ module Main =
                 match method with
                 | Seq -> processImagesSequentially pathIn pathOut applicators
                 | Agent args -> processImagesUsingAgents pathIn pathOut applicators (args.GetAllResults())
-                | AgentParallel -> experimental pathIn pathOut applicators
+                | AgentParallel -> processImagesParallelUsingAgents pathIn pathOut applicators
 
         finalMessage imgCount
 

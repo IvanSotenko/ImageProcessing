@@ -182,7 +182,7 @@ let processImagesUsingAgents inDir outDir applicators (args: AgentArgs list) =
             imagesPaths.Length
 
 
-let experimental inDir outDir applicators =
+let processImagesParallelUsingAgents inDir outDir applicators =
     let applicator image =
         List.fold (fun img applicator -> applicator img) image applicators
         

@@ -105,7 +105,7 @@ type ioTestsTypes =
                     Arb.generate<FilterKernel>
                     |> Gen.map (fun filter -> applyFilter filter.Kernel) ]
         
-        |> Gen.nonEmptyListOf |> Gen.scaleSize (fun s -> s / 15) |> Arb.fromGen
+        |> Gen.nonEmptyListOf |> Gen.scaleSize (fun s -> s / 13) |> Arb.fromGen
     
     
     static member ArgsForAngentProcessing() =
