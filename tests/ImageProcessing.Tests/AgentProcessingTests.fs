@@ -10,6 +10,7 @@ open Generators
 
 type Msg =
     | ReqFolder of AsyncReplyChannel<string>
+    | DeleteFolder of path: string
     | EOS of AsyncReplyChannel<unit>
 
 
@@ -37,6 +38,10 @@ type FolderGenerator(path) =
                         System.IO.Directory.CreateDirectory(pathToExpected) |> ignore
                         ch.Reply(pathToMainFolder)
                         return! loop (n + 1)
+                    
+                    | DeleteFolder path ->
+                        System.IO.Directory.Delete(path, true)
+                        return! loop n
                         
                     | EOS ch ->
                         let pathToDelete = System.IO.Path.Join([|path; topFolderName|])
@@ -47,6 +52,7 @@ type FolderGenerator(path) =
             loop 1)
 
     member this.GetFolder() = agent.PostAndReply(ReqFolder)
+    member this.CleanUp(path) = agent.Post(DeleteFolder path)
     member this.EOS() = agent.PostAndReply(EOS)
     
 
@@ -75,7 +81,9 @@ let tests =
               
               let actualResult = loadImages actualOutputFolder
               let expectedResult = loadImages expectedOutputFolder
-
+              
+              generator.CleanUp(outputFolder)
+              
               Expect.equal actualResult expectedResult "The results were different"
               
               
@@ -95,6 +103,8 @@ let tests =
               
               let actualResult = loadImages actualOutputFolder
               let expectedResult = loadImages expectedOutputFolder
+              
+              generator.CleanUp(outputFolder)
 
               Expect.equal actualResult expectedResult "The results were different"
               
@@ -115,7 +125,9 @@ let tests =
               
               let actualResult = loadImages actualOutputFolder
               let expectedResult = loadImages expectedOutputFolder
-
+              
+              generator.CleanUp(outputFolder)
+              
               Expect.equal actualResult expectedResult "The results were different"
               
               
@@ -135,6 +147,8 @@ let tests =
               
               let actualResult = loadImages actualOutputFolder
               let expectedResult = loadImages expectedOutputFolder
+              
+              generator.CleanUp(outputFolder)
 
               Expect.equal actualResult expectedResult "The results were different"
               
@@ -153,6 +167,8 @@ let tests =
               
               let actualResult = loadImages actualOutputFolder
               let expectedResult = loadImages expectedOutputFolder
+              
+              generator.CleanUp(outputFolder)
 
               Expect.equal actualResult expectedResult "The results were different"
               ]
