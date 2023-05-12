@@ -52,7 +52,6 @@ type FolderGenerator(path) =
 
 let testFolder = "..\..\..\..\..\..\ImageProcessing\\testImages"
 let generator = FolderGenerator(testFolder)
-
 let testInputFolder = System.IO.Path.Join([|testFolder; "input"|])
 
 
@@ -67,7 +66,7 @@ let tests =
               let actualOutputFolder = System.IO.Path.Join([|outputFolder; actualOutputFolderName|])
               let expectedOutputFolder = System.IO.Path.Join([|outputFolder; expectedOutputFolderName|])
               
-              let args = [ReadFirst]
+              let args = []
               
               processImagesSequentially testInputFolder expectedOutputFolder applicators.Get |> ignore
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args |> ignore

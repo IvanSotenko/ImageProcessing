@@ -23,6 +23,7 @@ and Arguments =
     | Filter of name: FilterKernel
     | Rotate of direction: Direction
     | [<Unique; AltCommandLine("-m")>] Method of ParseResults<Method>
+    | Logging
 
     interface IArgParserTemplate with
         member s.Usage =
@@ -32,3 +33,4 @@ and Arguments =
             | Filter _ -> "Specify filter to apply."
             | Rotate _ -> "Specify the direction of rotation."
             | Method _ -> "Specify the processing method."
+            | Logging _ -> "Enable logging of the image processing process."

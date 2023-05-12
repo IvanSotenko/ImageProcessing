@@ -163,8 +163,11 @@ let processImagesSequentially pathIn pathOut applicators =
 
     let images = loadImages pathIn
 
-    let applyAll image =
-        List.fold (fun img applicator -> applicator img) image applicators
+    let applyAll (image: Image) =
+        Logging.logger.Log($"Main thread: processing image {image.Name}")
+        let result = List.fold (fun img applicator -> applicator img) image applicators
+        Logging.logger.Log($"Main thread: processing of the image {image.Name} is completed")
+        result
 
     let processedImages = images |> Array.map applyAll
 

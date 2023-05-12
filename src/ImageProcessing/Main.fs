@@ -4,6 +4,7 @@ open System
 open ConsoleParsing
 open ImageProcessing
 open Streaming
+open Logging
 
 [<AutoOpen>]
 module PrintInfo =
@@ -46,6 +47,10 @@ module Main =
                 results.Raise(NoTransformationsException("No transformations were specified"))
 
             else
+                
+                if not (results.Contains Logging) then
+                    logger.Terminate()
+                    
                 let filters = results.GetResults Filter
                 let rotations = results.GetResults Rotate
 

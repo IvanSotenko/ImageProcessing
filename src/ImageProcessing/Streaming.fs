@@ -28,9 +28,6 @@ type stringMsg =
 type imageMsg =
     | Img of Image
     | EOS of AsyncReplyChannel<unit>
-    
-    
-let logger = Logger()
 
 
 let imgSaver outDir name =
