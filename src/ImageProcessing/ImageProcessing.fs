@@ -24,7 +24,7 @@ type Direction =
     | Right
 
 
-type Filters =
+type FilterKernel =
     | GaussianBlur
     | Edges
     | MotionBlur

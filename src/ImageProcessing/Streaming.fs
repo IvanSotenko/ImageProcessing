@@ -32,6 +32,7 @@ type imageMsg =
     
 let logger = Logger()
 
+
 let imgSaver outDir name =
     let outFile (imgName: string) =
         let newName = "proc_" + imgName
@@ -131,16 +132,16 @@ let createProcessorChain (applicators: (Image -> Image)[]) outDir : MailboxProce
     loop Array.empty 0
 
 
-let processImagesUsingAgents inDir outDir applicators (args: ParseResults<AgentArgs>) =
+let processImagesUsingAgents inDir outDir applicators (args: AgentArgs list) =
 
-    if args.Contains Chain then
+    if List.contains Chain args then
 
         let processors =
             createProcessorChain (applicators |> Array.ofList |> Array.rev) outDir
 
         let firstProcessor = Array.head processors
 
-        if args.Contains ReadFirst then
+        if List.contains ReadFirst args then
             let imagesToProcess = loadImages inDir
             imagesToProcess |> Array.iter (fun img -> firstProcessor.Post(Img img))
 
@@ -166,7 +167,7 @@ let processImagesUsingAgents inDir outDir applicators (args: ParseResults<AgentA
         let saver = imgSaver outDir "ImageSaver"
         let processor = imgProcessor applicator saver "ImageProcessor"
 
-        if args.Contains ReadFirst then
+        if List.contains ReadFirst args then
             let imagesToProcess = loadImages inDir
             imagesToProcess |> Array.iter (fun img -> processor.Post(Img img))
 

@@ -5,13 +5,12 @@ open Expecto
 open System
 open ImageProcessing.ImageProcessing
 
-type FilterKernel =
-    | FilterKernel of float32[][]
+type Kernel =
+    | Kernel of float32[][]
 
     member xs.Get =
         match xs with
-        | FilterKernel a -> a
-
+        | Kernel a -> a
 
 type NonSquare2DArray<'A> =
     | NonSquare2DArray of 'A[][]
@@ -27,6 +26,14 @@ type EvenSquare2DArray<'A> =
     member xs.Get =
         match xs with
         | EvenSquare2DArray a -> a
+
+
+type Applicators =
+    | Applicators of (Image -> Image) list
+    
+    member xs.Get =
+        match xs with
+        | Applicators a -> a
 
 
 let rnd = Random()
@@ -47,13 +54,13 @@ let unmatchedInt (minValue, maxValue) targetInt =
     values[rnd.Next(values.Length)]
 
 
-type ImageTypes =
+type ImageTestTypes =
     static member Kernel() =
         let ker len =
             Arb.generate<float32>
             |> Gen.arrayOfLength len
             |> Gen.arrayOfLength len
-            |> Gen.map FilterKernel
+            |> Gen.map Kernel
 
         Gen.sized ker |> Gen.scaleSize (fun s -> 2 * (s / 15) + 1) |> Arb.fromGen
 
@@ -79,6 +86,7 @@ type ImageTypes =
 
         Gen.sized ker |> Gen.scaleSize (fun s -> 2 * (s / 15)) |> Arb.fromGen
 
+    
     static member Image() =
         Arb.generate<byte>
         |> Gen.array2DOf
@@ -86,4 +94,19 @@ type ImageTypes =
         |> Gen.map2 Arr2DToImage Arb.generate<string>
         |> Arb.fromGen
 
-let config = { FsCheckConfig.defaultConfig with arbitrary = [ typeof<ImageTypes> ] }
+
+type ioTestsTypes =
+    static member ApplicatorList() =
+        Gen.oneof [ Arb.generate<Direction>
+                    |> Gen.map rotate90
+                    
+                    Arb.generate<FilterKernel>
+                    |> Gen.map (fun filter -> applyFilter filter.Kernel) ]
+        
+        |> Gen.nonEmptyListOf |> Gen.scaleSize (fun s -> s / 15) |> Arb.fromGen
+        
+
+let mainConfig = { FsCheckConfig.defaultConfig with arbitrary = [ typeof<ImageTestTypes> ] }  
+let ioConfig =  { FsCheckConfig.defaultConfig with
+                    arbitrary = [ typeof<ioTestsTypes> ]
+                    maxTest = 5 }

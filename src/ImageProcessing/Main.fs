@@ -27,7 +27,7 @@ module Main =
 
     let getApplicators filters rotations =
         List.append
-            (List.map (fun (filter: Filters) -> applyFilter filter.Kernel) filters)
+            (List.map (fun (filter: FilterKernel) -> applyFilter filter.Kernel) filters)
             (List.map (fun (direction: Direction) -> rotate90 direction) rotations)
 
 
@@ -59,7 +59,7 @@ module Main =
 
                 match method with
                 | Seq -> processImagesSequentially pathIn pathOut applicators
-                | Agent args -> processImagesUsingAgents pathIn pathOut applicators args
+                | Agent args -> processImagesUsingAgents pathIn pathOut applicators (args.GetAllResults())
                 | AgentParallel -> experimental pathIn pathOut applicators
 
         finalMessage imgCount

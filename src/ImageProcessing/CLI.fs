@@ -20,7 +20,7 @@ type Method =
 
 and Arguments =
     | [<ExactlyOnce>] Path of pathIn: string * pathOut: string
-    | Filter of name: Filters
+    | Filter of name: FilterKernel
     | Rotate of direction: Direction
     | [<Unique; AltCommandLine("-m")>] Method of ParseResults<Method>
 
