@@ -3,7 +3,9 @@
 open FsCheck
 open Expecto
 open System
-open ImageProcessing.ImageProcessing
+open ImageProcessing
+open ImageProcessing
+open Streaming
 
 type Kernel =
     | Kernel of float32[][]
@@ -104,9 +106,16 @@ type ioTestsTypes =
                     |> Gen.map (fun filter -> applyFilter filter.Kernel) ]
         
         |> Gen.nonEmptyListOf |> Gen.scaleSize (fun s -> s / 15) |> Arb.fromGen
-        
+    
+    
+    static member ArgsForAngentProcessing() =
+        Gen.oneof [ gen { return [] }
+                    gen { return [Chain] }
+                    gen { return [ReadFirst] }
+                    gen { return [Chain; ReadFirst] } ]
+        |> Arb.fromGen
 
 let mainConfig = { FsCheckConfig.defaultConfig with arbitrary = [ typeof<ImageTestTypes> ] }  
 let ioConfig =  { FsCheckConfig.defaultConfig with
                     arbitrary = [ typeof<ioTestsTypes> ]
-                    maxTest = 5 }
+                    maxTest = 4 }

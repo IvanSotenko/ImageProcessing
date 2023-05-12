@@ -58,15 +58,17 @@ let testInputFolder = System.IO.Path.Join([|testFolder; "input"|])
 [<Tests>]
 let tests =
     testList
-        ""
-        [ testPropertyWithConfig ioConfig ""
+        "123"
+        [ testPropertyWithConfig ioConfig "1"
           <| fun (applicators: Applicators) ->
+              
+              let args = []
+              
+              printfn  $"len:{applicators.Get.Length}\nargs: {args}\n"
               
               let outputFolder = generator.GetFolder()
               let actualOutputFolder = System.IO.Path.Join([|outputFolder; actualOutputFolderName|])
               let expectedOutputFolder = System.IO.Path.Join([|outputFolder; expectedOutputFolderName|])
-              
-              let args = []
               
               processImagesSequentially testInputFolder expectedOutputFolder applicators.Get |> ignore
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args |> ignore
@@ -74,4 +76,83 @@ let tests =
               let actualResult = loadImages actualOutputFolder
               let expectedResult = loadImages expectedOutputFolder
 
-              Expect.equal actualResult expectedResult "The results were different" ]
+              Expect.equal actualResult expectedResult "The results were different"
+              
+              
+          testPropertyWithConfig ioConfig "2"
+          <| fun (applicators: Applicators) ->
+              
+              let args = [ ReadFirst ]
+              
+              printfn  $"len:{applicators.Get.Length}\nargs: {args}\n"
+              
+              let outputFolder = generator.GetFolder()
+              let actualOutputFolder = System.IO.Path.Join([|outputFolder; actualOutputFolderName|])
+              let expectedOutputFolder = System.IO.Path.Join([|outputFolder; expectedOutputFolderName|])
+              
+              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get |> ignore
+              processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args |> ignore
+              
+              let actualResult = loadImages actualOutputFolder
+              let expectedResult = loadImages expectedOutputFolder
+
+              Expect.equal actualResult expectedResult "The results were different"
+              
+              
+          testPropertyWithConfig ioConfig "3"
+          <| fun (applicators: Applicators) ->
+              
+              let args = [ Chain ]
+              
+              printfn  $"len:{applicators.Get.Length}\nargs: {args}\n"
+              
+              let outputFolder = generator.GetFolder()
+              let actualOutputFolder = System.IO.Path.Join([|outputFolder; actualOutputFolderName|])
+              let expectedOutputFolder = System.IO.Path.Join([|outputFolder; expectedOutputFolderName|])
+              
+              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get |> ignore
+              processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args |> ignore
+              
+              let actualResult = loadImages actualOutputFolder
+              let expectedResult = loadImages expectedOutputFolder
+
+              Expect.equal actualResult expectedResult "The results were different"
+              
+              
+          testPropertyWithConfig ioConfig "4"
+          <| fun (applicators: Applicators) ->
+              
+              let args = [ ReadFirst; Chain ]
+              
+              printfn  $"len:{applicators.Get.Length}\nargs: {args}\n"
+              
+              let outputFolder = generator.GetFolder()
+              let actualOutputFolder = System.IO.Path.Join([|outputFolder; actualOutputFolderName|])
+              let expectedOutputFolder = System.IO.Path.Join([|outputFolder; expectedOutputFolderName|])
+              
+              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get |> ignore
+              processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args |> ignore
+              
+              let actualResult = loadImages actualOutputFolder
+              let expectedResult = loadImages expectedOutputFolder
+
+              Expect.equal actualResult expectedResult "The results were different"
+              
+              
+          testPropertyWithConfig ioConfig "5"
+          <| fun (applicators: Applicators) ->
+              
+              printfn  $"len:{applicators.Get.Length}\nparallel\n"
+              
+              let outputFolder = generator.GetFolder()
+              let actualOutputFolder = System.IO.Path.Join([|outputFolder; actualOutputFolderName|])
+              let expectedOutputFolder = System.IO.Path.Join([|outputFolder; expectedOutputFolderName|])
+              
+              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get |> ignore
+              experimental testInputFolder actualOutputFolder applicators.Get |> ignore
+              
+              let actualResult = loadImages actualOutputFolder
+              let expectedResult = loadImages expectedOutputFolder
+
+              Expect.equal actualResult expectedResult "The results were different"
+              ]
