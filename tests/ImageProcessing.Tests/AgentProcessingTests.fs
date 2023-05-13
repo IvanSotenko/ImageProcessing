@@ -73,113 +73,89 @@ type OutputFolderGenerator() =
     member this.CleanUp(id) = agent.Post(DeleteDirectory id)
     member this.EOS() = agent.PostAndReply(EOS)
 
-
-
-type counterMsg =
-    | Add of n: int
-    | Fetch of AsyncReplyChannel<int>
-    
-let counter =
-        MailboxProcessor.Start(fun inbox ->
-            let rec loop n =
-                async {
-                    let! msg = inbox.Receive()
-                    match msg with
-                    | Add k -> return! loop (k + n)
-                    | Fetch ch -> ch.Reply(n)
-                }
-
-            loop 0)
-
 let generator = OutputFolderGenerator()
 
 
 [<Tests>]
 let agentProcessingTests =
     testList
-        "Tests of the logic of functions for image processing using agents"
+        "Test of the logic of functions for image processing using agents"
         [ testPropertyWithConfig ioConfig ""
           <| fun (applicators: Applicators) (img: Image[]) ->
-              printfn $"\narr length: {img.Length}"
-              printfn "averege length: %A" (Array.map (fun (im: Image) -> im.Data.Length) img)
-              let n = Array.sum (Array.map (fun (image: Image) -> image.Data.Length) img)
-              counter.Post(Add (n*applicators.Get.Length))
-              
               let id = generator.GetNewId()
-              
+
               let testInputFolder = generator.GetSubFolder(id, "input")
               saveImages testInputFolder img
-              
+
               let expectedOutputFolder = generator.GetSubFolder(id, "expectedOutput")
               let actualOutputFolder = generator.GetSubFolder(id, "actualOutput")
-              
+
               processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
               |> ignore
-              
+
               let expectedOutput = loadImages expectedOutputFolder
-              
+
               let args = []
-              
+
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
-              
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-              
-              
+
+
               let args = [ ReadFirst ]
-              
+
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
-              
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-              
-              
+
+
               let args = [ Chain ]
-              
+
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
-              
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-              
-              
-              
+
+
+
               let args = [ ReadFirst; Chain ]
-              
+
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
-              
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-              
-              
+
+
               processImagesParallelUsingAgents testInputFolder actualOutputFolder applicators.Get
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
-              
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   "The output of processImagesParallelUsingAgents does not match results obtained by sequential processing"
-              
-              generator.CleanUp(id)
-               ]
+
+              generator.CleanUp(id) ]

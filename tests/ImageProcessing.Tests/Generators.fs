@@ -58,10 +58,6 @@ let unmatchedInt (minValue, maxValue) targetInt =
     values[rnd.Next(values.Length)]
 
 
-let allowedChars = [|'a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h'; 'i'; 'j'; 'k'; 'l'; 'm'
-                     'n'; 'o'; 'p'; 'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x'; 'y'; 'z'|]
-Char.IsLetter
-
 type ImageTestTypes =
     static member Kernel() =
         let ker len =
@@ -116,9 +112,8 @@ type ioTestsTypes =
         |> Gen.nonEmptyListOf
         |> Gen.scaleSize (fun s -> s / 15) // Set the scaling of the length of the array of applicators
         |> Arb.fromGen
-        
-    
-    
+
+
     static member ImageList() =
         let genImgName =
             Arb.generate<char>
@@ -126,18 +121,18 @@ type ioTestsTypes =
             |> Gen.arrayOf
             |> Gen.map String
             |> Gen.map (fun s -> s + ".jpg")
-            
+
         Arb.generate<byte>
         |> Gen.array2DOf
-        |> Gen.scaleSize (fun s -> s*1000) // Set the scaling of the size of a single image
+        |> Gen.scaleSize (fun s -> s * 1000) // Set the scaling of the size of a single image
         |> Gen.filter (fun xs -> (Array2D.length1 xs <> 0) && (Array2D.length2 xs <> 0))
         |> Gen.map2 Arr2DToImage genImgName
         |> Gen.arrayOf
-        |> Gen.filter (fun xs -> xs.Length <> 0) 
-        |> Gen.scaleSize (fun s -> s/5)// Set the scaling of the length of the array of images
-        |> Arb.fromGen    
-  
-        
+        |> Gen.filter (fun xs -> xs.Length <> 0)
+        |> Gen.scaleSize (fun s -> s / 5) // Set the scaling of the length of the array of images
+        |> Arb.fromGen
+
+
 let mainConfig =
     { FsCheckConfig.defaultConfig with arbitrary = [ typeof<ImageTestTypes> ] }
 
