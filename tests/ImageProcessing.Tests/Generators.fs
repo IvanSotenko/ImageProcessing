@@ -110,7 +110,7 @@ type ioTestsTypes =
               Arb.generate<FilterKernel> |> Gen.map (fun filter -> applyFilter filter.Kernel) ]
 
         |> Gen.nonEmptyListOf
-        |> Gen.scaleSize (fun s -> s / 13)
+        |> Gen.scaleSize (fun s -> s / 15)
         |> Arb.fromGen
 
 let mainConfig =

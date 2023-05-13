@@ -86,10 +86,10 @@ let agentProcessingTests =
         "Tests of the logic of functions for image processing using agents"
         [ testPropertyWithConfig ioConfig ""
           <| fun (applicators: Applicators) ->
-              
+
               let id = generator.GetNewId()
-              let expectedOutputFolder = generator.GetOutputFolder(id, "Expected")
-              let actualOutputFolder = generator.GetOutputFolder(id, "Actual")
+              let expectedOutputFolder = generator.GetOutputFolder(id, "expected")
+              let actualOutputFolder = generator.GetOutputFolder(id, "actual")
 
               processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
               |> ignore
@@ -97,53 +97,63 @@ let agentProcessingTests =
               let expectedOutput = loadImages expectedOutputFolder
 
               let args = []
+
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
+
               let actualOutput = loadImages actualOutputFolder
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
 
-              
+
               let args = [ ReadFirst ]
+
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
 
-              
+
               let args = [ Chain ]
+
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
 
-              
-              
+
+
               let args = [ ReadFirst; Chain ]
+
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
+
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-                  
-                  
+
+
               processImagesParallelUsingAgents testInputFolder actualOutputFolder applicators.Get
               |> ignore
-              
+
               let actualOutput = loadImages actualOutputFolder
+
               Expect.equal
                   actualOutput
                   expectedOutput
