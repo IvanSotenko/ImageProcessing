@@ -90,7 +90,7 @@ let readProcessAndSave outDir filterApplicator name =
                     ch.Reply()
 
                 | Str path ->
-                    logger.Log($"{name}: File is reading - {path}.")
+                    logger.Log($"{name}: File is reading - {System.IO.Path.GetFullPath path}.")
                     let img = loadImage path
                     logger.Log($"{name}: processing image {img.Name}.")
                     let processedImg = filterApplicator img

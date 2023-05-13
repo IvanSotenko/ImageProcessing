@@ -68,11 +68,12 @@ type FolderGenerator(path) =
     member this.EOS() = agent.PostAndReply(EOS)
 
 
-let testFolder = "..\..\..\..\..\\testImages"
+let testFolder =
+    System.Environment.GetEnvironmentVariable("PATH_TO_THE_TEST_IMAGES_FOLDER")
+
 let generator = FolderGenerator(testFolder)
 let testInputFolder = System.IO.Path.Join([| testFolder; "input" |])
 
-let a = System.Environment.GetEnvironmentVariable 
 
 [<Tests>]
 let agentProcessingTests =
