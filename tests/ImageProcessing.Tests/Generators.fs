@@ -47,6 +47,8 @@ let Arr2DToImage (name: string) (arr: byte[,]) =
     let len = len1 * len2
     Image((Array.init len (fun i -> arr[i / len2, i % len2])), len1, len2, name)
 
+
+/// Returns a random integer from the range (minValue, maxValue), including bounds and not including targetInt
 let unmatchedInt (minValue, maxValue) targetInt =
     let values =
         [ for i in minValue..maxValue do
@@ -64,7 +66,10 @@ type ImageTestTypes =
             |> Gen.arrayOfLength len
             |> Gen.map Kernel
 
-        Gen.sized ker |> Gen.scaleSize (fun s -> 2 * (s / 15) + 1) |> Arb.fromGen
+        Gen.sized ker
+        |> Gen.scaleSize (fun s -> 2 * (s / 15) + 1) // Kernel diameter must be an odd number
+                                                               // (and not really big)
+        |> Arb.fromGen
 
 
     static member NonSquareKernel() =
@@ -108,7 +113,7 @@ type ioTestsTypes =
         |> Gen.nonEmptyListOf |> Gen.scaleSize (fun s -> s / 13) |> Arb.fromGen
     
     
-    static member ArgsForAngentProcessing() =
+    static member ArgsForAgentProcessing() =
         Gen.oneof [ gen { return [] }
                     gen { return [Chain] }
                     gen { return [ReadFirst] }

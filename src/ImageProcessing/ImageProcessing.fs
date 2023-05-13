@@ -67,7 +67,7 @@ type FilterKernel =
             [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
             |> Array.map (Array.map (fun x -> (float32 x) / 9f))
 
-
+ 
 let loadImage (file: string) =
     let img = Image.Load<L8> file
 
@@ -84,6 +84,7 @@ let allowedImageFormats =
     Set.ofArray [| ".gif"; ".png"; ".webp"; ".pbm"; ".tiff"; ".bmp"; ".jpeg"; ".jpg"; ".tga" |]
 
 
+///  Gets all image files in a directory, or gets a single image file. Ignores all non-image files.
 let getImagePaths dir =
     if System.IO.File.Exists dir then
         Array.singleton dir
@@ -93,6 +94,8 @@ let getImagePaths dir =
         files
         |> Array.filter (fun file -> allowedImageFormats.Contains(System.IO.Path.GetExtension file))
 
+
+/// Return all images from directory or only one image by specified path
 let loadImages dir =
     let imgFiles = getImagePaths dir
     Array.map loadImage imgFiles
@@ -106,6 +109,7 @@ let saveImages directory (images: Image[]) =
     Array.iter save images
 
 
+/// Checks if float[][] is square and has odd length
 let checkKernelFormat (kernel: float32[][]) =
     if (Array.isEmpty kernel) then
         Some(ArgumentException("The filter kernel is empty"))

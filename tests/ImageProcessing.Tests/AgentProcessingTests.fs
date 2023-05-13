@@ -1,6 +1,5 @@
 ﻿module ImageProcessing.Tests.AgentProcessingTests
 
-open Argu
 open Expecto
 open ImageProcessing
 
@@ -18,7 +17,11 @@ let actualOutputFolderName = "actualOutput"
 let expectedOutputFolderName = "expectedOutput"
 let topFolderName = "output"
     
-
+/// <summary>
+///     Deals with creating numbered folders and deleting them in a given directory
+///     to avoid problems with accessing files during parallel testing
+/// </summary>
+/// <param name="path">Directory where output/testOutputN folders will be created.</param>
 type FolderGenerator(path) =
     
     let agent =

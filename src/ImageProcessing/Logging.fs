@@ -3,7 +3,7 @@
 type LogMessage =
     | Message of string
     | Off of AsyncReplyChannel<unit>
-
+    
 
 type Logger() =
 

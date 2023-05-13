@@ -32,6 +32,7 @@ module FastCheck =
                     "Invalid input path."
                 else
                     "Invalid output path."
+                    
             raise (ArgumentException(expMessage))
     
 
@@ -46,6 +47,7 @@ module Main =
             (List.map (fun (filter: FilterKernel) -> applyFilter filter.Kernel) filters)
             (List.map (fun (direction: Direction) -> rotate90 direction) rotations)
 
+
     
     [<EntryPoint>]
     let main (argv: string array) =
@@ -56,7 +58,8 @@ module Main =
         let path = results.GetResult Path
         let pathIn = fst path |> pathCheck true 
         let pathOut = snd path |> pathCheck false
-
+        
+        // All "process_" image functions return the number of images to be printed at the end
         let imgCount =
             if (not (results.Contains Filter)) && (not (results.Contains Rotate)) then
                 results.Raise(NoTransformationsException("No transformations were specified"))
@@ -68,7 +71,8 @@ module Main =
                     
                 let filters = results.GetResults Filter
                 let rotations = results.GetResults Rotate
-
+                
+                // Seq/Agent/AgentParallel
                 let method =
                     if results.Contains Method then
                         (results.GetResult Method).GetAllResults()[0]

@@ -100,7 +100,7 @@ let readProcessAndSave outDir filterApplicator name =
                 }
         loop ())
     
-    
+// 
 let createProcessorChain (applicators: (Image -> Image)[]) outDir : MailboxProcessor<imageMsg>[] =
 
     let rec loop (processors: MailboxProcessor<imageMsg>[]) iterNum =
