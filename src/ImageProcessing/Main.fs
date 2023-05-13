@@ -20,6 +20,21 @@ module PrintInfo =
         printfn $"{message}"
 
 
+[<AutoOpen>]
+module FastCheck =
+    
+    let pathCheck isInput path =
+        if System.IO.File.Exists path || System.IO.Directory.Exists path then
+            path
+        else
+            let expMessage = 
+                if isInput then
+                    "Invalid input path."
+                else
+                    "Invalid output path."
+            raise (ArgumentException(expMessage))
+    
+
 module Main =
     open Argu
 
@@ -31,7 +46,7 @@ module Main =
             (List.map (fun (filter: FilterKernel) -> applyFilter filter.Kernel) filters)
             (List.map (fun (direction: Direction) -> rotate90 direction) rotations)
 
-
+    
     [<EntryPoint>]
     let main (argv: string array) =
 
@@ -39,8 +54,8 @@ module Main =
         let results = parser.Parse argv
 
         let path = results.GetResult Path
-        let pathIn = fst path
-        let pathOut = snd path
+        let pathIn = fst path |> pathCheck true 
+        let pathOut = snd path |> pathCheck false
 
         let imgCount =
             if (not (results.Contains Filter)) && (not (results.Contains Rotate)) then
