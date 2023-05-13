@@ -66,7 +66,7 @@ type OutputFolderGenerator() =
     member this.GetNewId() = agent.PostAndReply(NewMainFolder)
 
     /// Creates a subfolder to put the test output into
-    member this.GetOutputFolder(id, name) =
+    member this.GetSubFolder(id, name) =
         agent.PostAndReply(fun ch -> CreateSubFolder(id, name, ch))
 
     /// Deletes the main folder
@@ -74,8 +74,22 @@ type OutputFolderGenerator() =
     member this.EOS() = agent.PostAndReply(EOS)
 
 
-let testInputFolder =
-    System.Environment.GetEnvironmentVariable("PATH_TO_THE_TEST_IMAGES_FOLDER")
+
+type counterMsg =
+    | Add of n: int
+    | Fetch of AsyncReplyChannel<int>
+    
+let counter =
+        MailboxProcessor.Start(fun inbox ->
+            let rec loop n =
+                async {
+                    let! msg = inbox.Receive()
+                    match msg with
+                    | Add k -> return! loop (k + n)
+                    | Fetch ch -> ch.Reply(n)
+                }
+
+            loop 0)
 
 let generator = OutputFolderGenerator()
 
@@ -85,78 +99,87 @@ let agentProcessingTests =
     testList
         "Tests of the logic of functions for image processing using agents"
         [ testPropertyWithConfig ioConfig ""
-          <| fun (applicators: Applicators) ->
-
+          <| fun (applicators: Applicators) (img: Image[]) ->
+              printfn $"\narr length: {img.Length}"
+              printfn "averege length: %A" (Array.map (fun (im: Image) -> im.Data.Length) img)
+              let n = Array.sum (Array.map (fun (image: Image) -> image.Data.Length) img)
+              counter.Post(Add (n*applicators.Get.Length))
+              
               let id = generator.GetNewId()
-              let expectedOutputFolder = generator.GetOutputFolder(id, "expected")
-              let actualOutputFolder = generator.GetOutputFolder(id, "actual")
-
+              
+              let testInputFolder = generator.GetSubFolder(id, "input")
+              saveImages testInputFolder img
+              
+              let expectedOutputFolder = generator.GetSubFolder(id, "expectedOutput")
+              let actualOutputFolder = generator.GetSubFolder(id, "actualOutput")
+              
               processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
               |> ignore
-
+              
               let expectedOutput = loadImages expectedOutputFolder
-
+              
               let args = []
-
+              
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-
+              
               let actualOutput = loadImages actualOutputFolder
-
+              
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-
-
+              
+              
               let args = [ ReadFirst ]
-
+              
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-
+              
               let actualOutput = loadImages actualOutputFolder
-
+              
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-
-
+              
+              
               let args = [ Chain ]
-
+              
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-
+              
               let actualOutput = loadImages actualOutputFolder
-
+              
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-
-
-
+              
+              
+              
               let args = [ ReadFirst; Chain ]
-
+              
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-
+              
               let actualOutput = loadImages actualOutputFolder
-
+              
               Expect.equal
                   actualOutput
                   expectedOutput
                   $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
-
-
+              
+              
               processImagesParallelUsingAgents testInputFolder actualOutputFolder applicators.Get
               |> ignore
-
+              
               let actualOutput = loadImages actualOutputFolder
-
+              
               Expect.equal
                   actualOutput
                   expectedOutput
                   "The output of processImagesParallelUsingAgents does not match results obtained by sequential processing"
-
-              generator.CleanUp(id) ]
+              
+              generator.CleanUp(id)
+               ]
