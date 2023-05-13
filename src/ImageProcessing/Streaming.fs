@@ -100,43 +100,34 @@ let readProcessAndSave outDir filterApplicator name =
                 }
         loop ())
     
-// 
-let createProcessorChain (applicators: (Image -> Image)[]) outDir : MailboxProcessor<imageMsg>[] =
 
-    let rec loop (processors: MailboxProcessor<imageMsg>[]) iterNum =
-        match processors.Length with
-        | n when n = applicators.Length -> processors
-        | 0 ->
-            let saver = imgSaver outDir "ImageSaver"
-
-            let processor =
-                Array.singleton (
-                    imgProcessor applicators[iterNum] saver $"ImgProcessor{applicators.Length - iterNum - 1}"
-                )
-
-            loop (Array.concat [ processor; processors ]) (iterNum + 1)
+/// <summary>
+///     Creates a chain of agents in the same order as the applicators are in the applicators list,
+///     each agent applies one applicator to an image and passes it to the next agent. Saver at the end of the chain.
+/// </summary>
+/// <returns>
+///     First agent from the chain.
+/// </returns>
+let createProcessorChain (applicators: (Image -> Image)[]) outDir : MailboxProcessor<imageMsg> =
+    let lastIndex = applicators.Length - 1
+    
+    let rec loop (curProcessor: MailboxProcessor<imageMsg>) index =
+        match index with
+        | -1 -> curProcessor   
         | _ ->
-            let processor =
-                Array.singleton (
-                    imgProcessor
-                        applicators[iterNum]
-                        (Array.head processors)
-                        $"ImgProcessor{applicators.Length - iterNum - 1}"
-                )
+            let nextProcessor = imgProcessor applicators[index] curProcessor $"ImgProcessor{index + 1}"
+            loop nextProcessor (index - 1)
 
-            loop (Array.concat [ processor; processors ]) (iterNum + 1)
-
-    loop Array.empty 0
+    let saver = imgSaver outDir "ImageSaver"
+    loop saver lastIndex
 
 
 let processImagesUsingAgents inDir outDir applicators (args: AgentArgs list) =
 
     if List.contains Chain args then
 
-        let processors =
-            createProcessorChain (applicators |> Array.ofList |> Array.rev) outDir
-
-        let firstProcessor = Array.head processors
+        let firstProcessor =
+            createProcessorChain (applicators |> Array.ofList) outDir
 
         if List.contains ReadFirst args then
             let imagesToProcess = loadImages inDir
