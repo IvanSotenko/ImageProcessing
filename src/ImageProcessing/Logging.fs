@@ -3,7 +3,7 @@
 type LogMessage =
     | Message of string
     | Off of AsyncReplyChannel<unit>
-    
+
 
 type Logger() =
 
@@ -13,13 +13,13 @@ type Logger() =
             let rec messageLoop () =
                 async {
                     let! msg = inbox.Receive()
+
                     match msg with
                     | Message msg ->
                         printfn $"{msg}"
                         return! messageLoop ()
-                    | Off ch ->
-                        ch.Reply()
-                    
+                    | Off ch -> ch.Reply()
+
                 }
 
             messageLoop ())

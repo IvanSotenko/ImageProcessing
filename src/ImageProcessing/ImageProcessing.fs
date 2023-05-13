@@ -67,7 +67,7 @@ type FilterKernel =
             [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
             |> Array.map (Array.map (fun x -> (float32 x) / 9f))
 
- 
+
 let loadImage (file: string) =
     let img = Image.Load<L8> file
 
@@ -76,9 +76,11 @@ let loadImage (file: string) =
     img.CopyPixelDataTo(Span<byte> buf)
     Image(buf, img.Height, img.Width, System.IO.Path.GetFileName file)
 
+
 let saveImage file (image: Image) =
     let img = Image.LoadPixelData<L8>(image.Data, image.Width, image.Height)
     img.Save file
+
 
 let allowedImageFormats =
     Set.ofArray [| ".gif"; ".png"; ".webp"; ".pbm"; ".tiff"; ".bmp"; ".jpeg"; ".jpg"; ".tga" |]

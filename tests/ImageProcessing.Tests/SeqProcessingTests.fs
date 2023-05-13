@@ -10,7 +10,9 @@ open ImageProcessing.ImageProcessing
 let rotationTests =
     testList
         "Tests for rotate90 function"
-        [ testPropertyWithConfig mainConfig "Turning image four times by 90 degrees is an identical transformation (Left)"
+        [ testPropertyWithConfig
+              mainConfig
+              "Turning image four times by 90 degrees is an identical transformation (Left)"
           <| fun (img: Image) ->
 
               let mutable rotating = img
@@ -21,7 +23,9 @@ let rotationTests =
               Expect.equal rotating img "The results were different"
 
 
-          testPropertyWithConfig mainConfig "Turning image four times by 90 degrees is an identical transformation (Right)"
+          testPropertyWithConfig
+              mainConfig
+              "Turning image four times by 90 degrees is an identical transformation (Right)"
           <| fun (img: Image) ->
 
               let mutable rotating = img

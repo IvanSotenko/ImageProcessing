@@ -1,4 +1,5 @@
 namespace ImageProcessing.Tests
+
 open AgentProcessingTests
 open ImageProcessing
 

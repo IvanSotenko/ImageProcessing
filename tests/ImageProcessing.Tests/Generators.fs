@@ -32,7 +32,7 @@ type EvenSquare2DArray<'A> =
 
 type Applicators =
     | Applicators of (Image -> Image) list
-    
+
     member xs.Get =
         match xs with
         | Applicators a -> a
@@ -68,7 +68,7 @@ type ImageTestTypes =
 
         Gen.sized ker
         |> Gen.scaleSize (fun s -> 2 * (s / 15) + 1) // Kernel diameter must be an odd number
-                                                               // (and not really big)
+        // (and not really big)
         |> Arb.fromGen
 
 
@@ -93,7 +93,7 @@ type ImageTestTypes =
 
         Gen.sized ker |> Gen.scaleSize (fun s -> 2 * (s / 15)) |> Arb.fromGen
 
-    
+
     static member Image() =
         Arb.generate<byte>
         |> Gen.array2DOf
@@ -104,23 +104,19 @@ type ImageTestTypes =
 
 type ioTestsTypes =
     static member ApplicatorList() =
-        Gen.oneof [ Arb.generate<Direction>
-                    |> Gen.map rotate90
-                    
-                    Arb.generate<FilterKernel>
-                    |> Gen.map (fun filter -> applyFilter filter.Kernel) ]
-        
-        |> Gen.nonEmptyListOf |> Gen.scaleSize (fun s -> s / 13) |> Arb.fromGen
-    
-    
-    static member ArgsForAgentProcessing() =
-        Gen.oneof [ gen { return [] }
-                    gen { return [Chain] }
-                    gen { return [ReadFirst] }
-                    gen { return [Chain; ReadFirst] } ]
+        Gen.oneof
+            [ Arb.generate<Direction> |> Gen.map rotate90
+
+              Arb.generate<FilterKernel> |> Gen.map (fun filter -> applyFilter filter.Kernel) ]
+
+        |> Gen.nonEmptyListOf
+        |> Gen.scaleSize (fun s -> s / 13)
         |> Arb.fromGen
 
-let mainConfig = { FsCheckConfig.defaultConfig with arbitrary = [ typeof<ImageTestTypes> ] }  
-let ioConfig =  { FsCheckConfig.defaultConfig with
-                    arbitrary = [ typeof<ioTestsTypes> ]
-                    maxTest = 4 }
+let mainConfig =
+    { FsCheckConfig.defaultConfig with arbitrary = [ typeof<ImageTestTypes> ] }
+
+let ioConfig =
+    { FsCheckConfig.defaultConfig with
+        arbitrary = [ typeof<ioTestsTypes> ]
+        maxTest = 4 }

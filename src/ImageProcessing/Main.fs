@@ -22,19 +22,19 @@ module PrintInfo =
 
 [<AutoOpen>]
 module FastCheck =
-    
+
     let pathCheck isInput path =
         if System.IO.File.Exists path || System.IO.Directory.Exists path then
             path
         else
-            let expMessage = 
+            let expMessage =
                 if isInput then
                     "Invalid input path."
                 else
                     "Invalid output path."
-                    
+
             raise (ArgumentException(expMessage))
-    
+
 
 module Main =
     open Argu
@@ -48,7 +48,7 @@ module Main =
             (List.map (fun (direction: Direction) -> rotate90 direction) rotations)
 
 
-    
+
     [<EntryPoint>]
     let main (argv: string array) =
 
@@ -56,22 +56,22 @@ module Main =
         let results = parser.Parse argv
 
         let path = results.GetResult Path
-        let pathIn = fst path |> pathCheck true 
+        let pathIn = fst path |> pathCheck true
         let pathOut = snd path |> pathCheck false
-        
+
         // All "process_" image functions return the number of images to be printed at the end
         let imgCount =
             if (not (results.Contains Filter)) && (not (results.Contains Rotate)) then
                 results.Raise(NoTransformationsException("No transformations were specified"))
 
             else
-                
+
                 if not (results.Contains Logging) then
                     logger.Terminate()
-                    
+
                 let filters = results.GetResults Filter
                 let rotations = results.GetResults Rotate
-                
+
                 // Seq/Agent/AgentParallel
                 let method =
                     if results.Contains Method then
