@@ -4,26 +4,30 @@ open Expecto
 open ImageProcessing
 
 open ImageProcessing
+open Microsoft.FSharp.Control
 open Streaming
 open Generators
 
 type Msg =
-    | ReqFolder of AsyncReplyChannel<string>
-    | DeleteFolder of path: string
+    | NewMainFolder of AsyncReplyChannel<int>
+    | CreateSubFolder of num: int * name: string * AsyncReplyChannel<string>
+    | DeleteDirectory of num: int
     | EOS of AsyncReplyChannel<unit>
 
 
-let actualOutputFolderName = "actualOutput"
-let expectedOutputFolderName = "expectedOutput"
-let topFolderName = "output"
+let topFolderName = "testOutput"
 
 
 /// <summary>
-///     Deals with creating numbered folders and deleting them in a given directory
+///     Deals with creating numbered folders for test output and deleting them
 ///     to avoid problems with accessing files during parallel testing
 /// </summary>
-/// <param name="path">Directory where output/testOutputN folders will be created.</param>
-type FolderGenerator(path) =
+type OutputFolderGenerator() =
+    let curDir = System.IO.Directory.GetCurrentDirectory()
+    let workingDir = System.IO.Path.Join([| curDir; topFolderName |])
+    do System.IO.Directory.CreateDirectory(workingDir) |> ignore
+
+    let getInternalFolderName n = $"output{n}"
 
     let agent =
         MailboxProcessor.Start(fun inbox ->
@@ -33,182 +37,116 @@ type FolderGenerator(path) =
                     let! msg = inbox.Receive()
 
                     match msg with
-                    | ReqFolder ch ->
-                        let mainFolderName = $"testOutput{n}"
-
-                        let pathToMainFolder =
-                            System.IO.Path.Join([| path; topFolderName; mainFolderName |])
-
-                        let pathToActual =
-                            System.IO.Path.Join([| pathToMainFolder; actualOutputFolderName |])
-
-                        let pathToExpected =
-                            System.IO.Path.Join([| pathToMainFolder; expectedOutputFolderName |])
-
-                        System.IO.Directory.CreateDirectory(pathToActual) |> ignore
-                        System.IO.Directory.CreateDirectory(pathToExpected) |> ignore
-                        ch.Reply(pathToMainFolder)
+                    | NewMainFolder ch ->
+                        let path = System.IO.Path.Join([| workingDir; getInternalFolderName n |])
+                        path |> System.IO.Directory.CreateDirectory |> ignore
+                        ch.Reply(n)
                         return! loop (n + 1)
 
-                    | DeleteFolder path ->
-                        System.IO.Directory.Delete(path, true)
+                    | CreateSubFolder (num, name, ch) ->
+                        let path = System.IO.Path.Join([| workingDir; getInternalFolderName num; name |])
+                        path |> System.IO.Directory.CreateDirectory |> ignore
+                        ch.Reply(path)
+                        return! loop n
+
+                    | DeleteDirectory num ->
+                        let pathToDelete = System.IO.Path.Join([| workingDir; getInternalFolderName num |])
+                        System.IO.Directory.Delete(pathToDelete, true)
                         return! loop n
 
                     | EOS ch ->
-                        let pathToDelete = System.IO.Path.Join([| path; topFolderName |])
-                        System.IO.Directory.Delete(pathToDelete, true)
+                        System.IO.Directory.Delete(workingDir, true)
                         ch.Reply()
 
                 }
 
             loop 1)
 
-    member this.GetFolder() = agent.PostAndReply(ReqFolder)
-    member this.CleanUp(path) = agent.Post(DeleteFolder path)
+    /// Creates a new main folder with a unique id
+    member this.GetNewId() = agent.PostAndReply(NewMainFolder)
+
+    /// Creates a subfolder to put the test output into
+    member this.GetOutputFolder(id, name) =
+        agent.PostAndReply(fun ch -> CreateSubFolder(id, name, ch))
+
+    /// Deletes the main folder
+    member this.CleanUp(id) = agent.Post(DeleteDirectory id)
     member this.EOS() = agent.PostAndReply(EOS)
 
 
-let testFolder =
+let testInputFolder =
     System.Environment.GetEnvironmentVariable("PATH_TO_THE_TEST_IMAGES_FOLDER")
 
-let generator = FolderGenerator(testFolder)
-let testInputFolder = System.IO.Path.Join([| testFolder; "input" |])
+let generator = OutputFolderGenerator()
 
 
 [<Tests>]
 let agentProcessingTests =
     testList
         "Tests of the logic of functions for image processing using agents"
-        [ testPropertyWithConfig ioConfig "processImagesUsingAgents is processImagesSequentially. Without any args"
+        [ testPropertyWithConfig ioConfig ""
           <| fun (applicators: Applicators) ->
+              
+              let id = generator.GetNewId()
+              let expectedOutputFolder = generator.GetOutputFolder(id, "Expected")
+              let actualOutputFolder = generator.GetOutputFolder(id, "Actual")
+
+              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
+              |> ignore
+
+              let expectedOutput = loadImages expectedOutputFolder
 
               let args = []
-
-              let outputFolder = generator.GetFolder()
-
-              let actualOutputFolder =
-                  System.IO.Path.Join([| outputFolder; actualOutputFolderName |])
-
-              let expectedOutputFolder =
-                  System.IO.Path.Join([| outputFolder; expectedOutputFolderName |])
-
-              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
-              |> ignore
-
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
+              let actualOutput = loadImages actualOutputFolder
+              Expect.equal
+                  actualOutput
+                  expectedOutput
+                  $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
 
-              let actualResult = loadImages actualOutputFolder
-              let expectedResult = loadImages expectedOutputFolder
-
-              generator.CleanUp(outputFolder)
-
-              Expect.equal actualResult expectedResult "The results were different"
-
-
-          testPropertyWithConfig ioConfig "processImagesUsingAgents is processImagesSequentially. Args: ReadFirst"
-          <| fun (applicators: Applicators) ->
-
+              
               let args = [ ReadFirst ]
-
-              let outputFolder = generator.GetFolder()
-
-              let actualOutputFolder =
-                  System.IO.Path.Join([| outputFolder; actualOutputFolderName |])
-
-              let expectedOutputFolder =
-                  System.IO.Path.Join([| outputFolder; expectedOutputFolderName |])
-
-              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
-              |> ignore
-
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
+              
+              let actualOutput = loadImages actualOutputFolder
+              Expect.equal
+                  actualOutput
+                  expectedOutput
+                  $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
 
-              let actualResult = loadImages actualOutputFolder
-              let expectedResult = loadImages expectedOutputFolder
-
-              generator.CleanUp(outputFolder)
-
-              Expect.equal actualResult expectedResult "The results were different"
-
-
-          testPropertyWithConfig ioConfig "processImagesUsingAgents is processImagesSequentially. Args: Chain"
-          <| fun (applicators: Applicators) ->
-
+              
               let args = [ Chain ]
-
-              let outputFolder = generator.GetFolder()
-
-              let actualOutputFolder =
-                  System.IO.Path.Join([| outputFolder; actualOutputFolderName |])
-
-              let expectedOutputFolder =
-                  System.IO.Path.Join([| outputFolder; expectedOutputFolderName |])
-
-              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
-              |> ignore
-
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
+              
+              let actualOutput = loadImages actualOutputFolder
+              Expect.equal
+                  actualOutput
+                  expectedOutput
+                  $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
 
-              let actualResult = loadImages actualOutputFolder
-              let expectedResult = loadImages expectedOutputFolder
-
-              generator.CleanUp(outputFolder)
-
-              Expect.equal actualResult expectedResult "The results were different"
-
-
-          testPropertyWithConfig
-              ioConfig
-              "processImagesUsingAgents is processImagesSequentially. Args: Chain and ReadFirst"
-          <| fun (applicators: Applicators) ->
-
+              
+              
               let args = [ ReadFirst; Chain ]
-
-              let outputFolder = generator.GetFolder()
-
-              let actualOutputFolder =
-                  System.IO.Path.Join([| outputFolder; actualOutputFolderName |])
-
-              let expectedOutputFolder =
-                  System.IO.Path.Join([| outputFolder; expectedOutputFolderName |])
-
-              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
-              |> ignore
-
               processImagesUsingAgents testInputFolder actualOutputFolder applicators.Get args
               |> ignore
-
-              let actualResult = loadImages actualOutputFolder
-              let expectedResult = loadImages expectedOutputFolder
-
-              generator.CleanUp(outputFolder)
-
-              Expect.equal actualResult expectedResult "The results were different"
-
-
-          testPropertyWithConfig ioConfig "processImagesParallelUsingAgents is processImagesSequentially"
-          <| fun (applicators: Applicators) ->
-
-              let outputFolder = generator.GetFolder()
-
-              let actualOutputFolder =
-                  System.IO.Path.Join([| outputFolder; actualOutputFolderName |])
-
-              let expectedOutputFolder =
-                  System.IO.Path.Join([| outputFolder; expectedOutputFolderName |])
-
-              processImagesSequentially testInputFolder expectedOutputFolder applicators.Get
-              |> ignore
-
+              
+              let actualOutput = loadImages actualOutputFolder
+              Expect.equal
+                  actualOutput
+                  expectedOutput
+                  $"The output of processImagesUsingAgents (args = {args}) does not match results obtained by sequential processing"
+                  
+                  
               processImagesParallelUsingAgents testInputFolder actualOutputFolder applicators.Get
               |> ignore
+              
+              let actualOutput = loadImages actualOutputFolder
+              Expect.equal
+                  actualOutput
+                  expectedOutput
+                  "The output of processImagesParallelUsingAgents does not match results obtained by sequential processing"
 
-              let actualResult = loadImages actualOutputFolder
-              let expectedResult = loadImages expectedOutputFolder
-
-              generator.CleanUp(outputFolder)
-
-              Expect.equal actualResult expectedResult "The results were different" ]
+              generator.CleanUp(id) ]
