@@ -120,6 +120,7 @@ type ioTestsTypes =
             |> Gen.filter Char.IsLetter
             |> Gen.arrayOf
             |> Gen.map String
+            |> Gen.filter (fun s -> s <> "")
             |> Gen.map (fun s -> s + ".jpg")
 
         Arb.generate<byte>
