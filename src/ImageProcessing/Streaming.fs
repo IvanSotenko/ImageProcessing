@@ -118,14 +118,15 @@ let readProcessAndSave outDir filterApplicator name =
 let createProcessorChain (applicators: (Image -> Image)[]) outDir : MailboxProcessor<imageMsg> =
     let lastIndex = applicators.Length - 1
 
-    let rec loop (curProcessor: MailboxProcessor<imageMsg>) index =
+    let rec loop (curAgent: MailboxProcessor<imageMsg>) index =
         match index with
-        | -1 -> curProcessor
+        // index = 0 -> We have reached the first applicator in the list -> return the agent with this applicator
+        | 0 -> imgProcessor applicators[0] curAgent "ImgProcessor1"
         | _ ->
-            let nextProcessor =
-                imgProcessor applicators[index] curProcessor $"ImgProcessor{index + 1}"
+            let nextAgent =
+                imgProcessor applicators[index] curAgent $"ImgProcessor{index + 1}"
 
-            loop nextProcessor (index - 1)
+            loop nextAgent (index - 1)
 
     let saver = imgSaver outDir "ImageSaver"
     loop saver lastIndex
