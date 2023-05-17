@@ -67,7 +67,7 @@ module Main =
             else
 
                 if not (results.Contains Logging) then
-                    logger.Terminate()
+                    logger.Finish()
 
                 let filters = results.GetResults Filter
                 let rotations = results.GetResults Rotate
@@ -87,5 +87,6 @@ module Main =
                 | AgentParallel -> processImagesParallelUsingAgents pathIn pathOut applicators
 
         finalMessage imgCount
+        logger.Finish()
 
         0

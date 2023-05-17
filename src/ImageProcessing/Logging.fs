@@ -26,6 +26,6 @@ type Logger() =
             })
 
     member this.Log(msg: string) = agent.Post(Message msg)
-    member this.Terminate() = agent.PostAndReply(Off)
+    member this.Finish() = agent.PostAndReply(Off)
 
 let logger = Logger()

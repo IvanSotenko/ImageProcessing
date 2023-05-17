@@ -10,7 +10,7 @@ module ExpectoTemplate =
 
     [<EntryPoint>]
     let main argv =
-        Logging.logger.Terminate()
+        Logging.logger.Finish()
         runTestsInAssembly defaultConfig argv |> ignore
         generator.EOS()
         0
