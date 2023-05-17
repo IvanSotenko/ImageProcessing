@@ -31,15 +31,15 @@ type imageMsg =
 
 
 let imgSaver outDir name =
-    
+
     let outFile (imgName: string) =
         let newName = "proc_" + imgName
         System.IO.Path.Combine(outDir, newName)
 
     MailboxProcessor.Start(fun inbox ->
-        
+
         let mutable isAgentRunning = true
-        
+
         async {
             while isAgentRunning do
                 let! msg = inbox.Receive()
@@ -54,15 +54,15 @@ let imgSaver outDir name =
                     logger.Log($"{name}: saving image {img.Name}")
                     saveImage (outFile img.Name) img
                     logger.Log($"{name}: {img.Name} is saved")
-        } )
+        })
 
 
 let imgProcessor filterApplicator (nextAgent: MailboxProcessor<_>) name =
 
     MailboxProcessor.Start(fun inbox ->
-        
+
         let mutable isAgentRunning = true
-        
+
         async {
             while isAgentRunning do
                 let! msg = inbox.Receive()
@@ -79,15 +79,15 @@ let imgProcessor filterApplicator (nextAgent: MailboxProcessor<_>) name =
                     let filtered = filterApplicator img
                     logger.Log($"{name}: {img.Name} is processed.")
                     nextAgent.Post(Img filtered)
-        } )
+        })
 
 
 let readProcessAndSave outDir filterApplicator name =
 
     MailboxProcessor.Start(fun (inbox: MailboxProcessor<stringMsg>) ->
-        
+
         let mutable isAgentRunning = true
-        
+
         async {
             while isAgentRunning do
                 let! msg = inbox.Receive()
@@ -105,7 +105,7 @@ let readProcessAndSave outDir filterApplicator name =
                     let processedImg = filterApplicator img
                     logger.Log($"{name}: saving image {img.Name}")
                     saveImages outDir (Array.singleton processedImg)
-        } )
+        })
 
 
 /// <summary>
@@ -123,8 +123,7 @@ let createProcessorChain (applicators: (Image -> Image)[]) outDir : MailboxProce
         // index = 0 -> We have reached the first applicator in the list -> return the agent with this applicator
         | 0 -> imgProcessor applicators[0] curAgent "ImgProcessor1"
         | _ ->
-            let nextAgent =
-                imgProcessor applicators[index] curAgent $"ImgProcessor{index + 1}"
+            let nextAgent = imgProcessor applicators[index] curAgent $"ImgProcessor{index + 1}"
 
             loop nextAgent (index - 1)
 

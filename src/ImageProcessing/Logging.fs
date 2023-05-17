@@ -17,14 +17,13 @@ type Logger() =
                     let! msg = inbox.Receive()
 
                     match msg with
-                    | Message msg ->
-                        printfn $"{msg}"
-                        
+                    | Message msg -> printfn $"{msg}"
+
                     | Off ch ->
                         isAgentRunning <- false
                         ch.Reply()
 
-            } )
+            })
 
     member this.Log(msg: string) = agent.Post(Message msg)
     member this.Terminate() = agent.PostAndReply(Off)

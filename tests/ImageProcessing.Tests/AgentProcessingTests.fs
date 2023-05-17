@@ -31,35 +31,35 @@ type OutputFolderGenerator() =
 
     let agent =
         MailboxProcessor.Start(fun inbox ->
-                
-                let mutable n = 1
-                let mutable isAgentRunning = true
-                
-                async {
-                    while isAgentRunning do
-                        let! msg = inbox.Receive()
 
-                        match msg with
-                        | NewMainFolder ch ->
-                            let path = System.IO.Path.Join([| workingDir; getInternalFolderName n |])
-                            path |> System.IO.Directory.CreateDirectory |> ignore
-                            ch.Reply(n)
-                            n <- n + 1
+            let mutable n = 1
+            let mutable isAgentRunning = true
 
-                        | CreateSubFolder (num, name, ch) ->
-                            let path = System.IO.Path.Join([| workingDir; getInternalFolderName num; name |])
-                            path |> System.IO.Directory.CreateDirectory |> ignore
-                            ch.Reply(path)
+            async {
+                while isAgentRunning do
+                    let! msg = inbox.Receive()
 
-                        | DeleteDirectory num ->
-                            let pathToDelete = System.IO.Path.Join([| workingDir; getInternalFolderName num |])
-                            System.IO.Directory.Delete(pathToDelete, true)
+                    match msg with
+                    | NewMainFolder ch ->
+                        let path = System.IO.Path.Join([| workingDir; getInternalFolderName n |])
+                        path |> System.IO.Directory.CreateDirectory |> ignore
+                        ch.Reply(n)
+                        n <- n + 1
 
-                        | EOS ch ->
-                            System.IO.Directory.Delete(workingDir, true)
-                            ch.Reply()
-                            isAgentRunning <- false
-                })
+                    | CreateSubFolder (num, name, ch) ->
+                        let path = System.IO.Path.Join([| workingDir; getInternalFolderName num; name |])
+                        path |> System.IO.Directory.CreateDirectory |> ignore
+                        ch.Reply(path)
+
+                    | DeleteDirectory num ->
+                        let pathToDelete = System.IO.Path.Join([| workingDir; getInternalFolderName num |])
+                        System.IO.Directory.Delete(pathToDelete, true)
+
+                    | EOS ch ->
+                        System.IO.Directory.Delete(workingDir, true)
+                        ch.Reply()
+                        isAgentRunning <- false
+            })
 
     /// Creates a new main folder with a unique id
     member this.GetNewId() = agent.PostAndReply(NewMainFolder)
