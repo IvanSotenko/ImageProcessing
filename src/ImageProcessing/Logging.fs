@@ -10,19 +10,21 @@ type Logger() =
     let agent =
         MailboxProcessor.Start(fun inbox ->
 
-            let rec messageLoop () =
-                async {
+            let mutable isAgentRunning = true
+
+            async {
+                while isAgentRunning do
                     let! msg = inbox.Receive()
 
                     match msg with
                     | Message msg ->
                         printfn $"{msg}"
-                        return! messageLoop ()
-                    | Off ch -> ch.Reply()
+                        
+                    | Off ch ->
+                        isAgentRunning <- false
+                        ch.Reply()
 
-                }
-
-            messageLoop ())
+            } )
 
     member this.Log(msg: string) = agent.Post(Message msg)
     member this.Terminate() = agent.PostAndReply(Off)

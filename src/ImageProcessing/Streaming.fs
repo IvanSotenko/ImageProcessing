@@ -31,40 +31,47 @@ type imageMsg =
 
 
 let imgSaver outDir name =
+    
     let outFile (imgName: string) =
         let newName = "proc_" + imgName
         System.IO.Path.Combine(outDir, newName)
 
     MailboxProcessor.Start(fun inbox ->
-        let rec loop () =
-            async {
+        
+        let mutable isAgentRunning = true
+        
+        async {
+            while isAgentRunning do
                 let! msg = inbox.Receive()
 
                 match msg with
                 | EOS ch ->
                     logger.Log($"{name}: end of stream")
+                    isAgentRunning <- false
                     ch.Reply()
 
                 | Img img ->
                     logger.Log($"{name}: saving image {img.Name}")
                     saveImage (outFile img.Name) img
                     logger.Log($"{name}: {img.Name} is saved")
-                    return! loop ()
-            }
+        } )
 
-        loop ())
 
 let imgProcessor filterApplicator (nextAgent: MailboxProcessor<_>) name =
 
     MailboxProcessor.Start(fun inbox ->
-        let rec loop () =
-            async {
+        
+        let mutable isAgentRunning = true
+        
+        async {
+            while isAgentRunning do
                 let! msg = inbox.Receive()
 
                 match msg with
                 | EOS ch ->
                     nextAgent.PostAndReply EOS
                     logger.Log($"{name}: end of stream.")
+                    isAgentRunning <- false
                     ch.Reply()
 
                 | Img img ->
@@ -72,21 +79,23 @@ let imgProcessor filterApplicator (nextAgent: MailboxProcessor<_>) name =
                     let filtered = filterApplicator img
                     logger.Log($"{name}: {img.Name} is processed.")
                     nextAgent.Post(Img filtered)
-                    return! loop ()
-            }
+        } )
 
-        loop ())
 
 let readProcessAndSave outDir filterApplicator name =
 
     MailboxProcessor.Start(fun (inbox: MailboxProcessor<stringMsg>) ->
-        let rec loop () =
-            async {
+        
+        let mutable isAgentRunning = true
+        
+        async {
+            while isAgentRunning do
                 let! msg = inbox.Receive()
 
                 match msg with
                 | stringMsg.EOS ch ->
                     logger.Log($"{name}: end of stream.")
+                    isAgentRunning <- false
                     ch.Reply()
 
                 | Str path ->
@@ -96,10 +105,7 @@ let readProcessAndSave outDir filterApplicator name =
                     let processedImg = filterApplicator img
                     logger.Log($"{name}: saving image {img.Name}")
                     saveImages outDir (Array.singleton processedImg)
-                    return! loop ()
-            }
-
-        loop ())
+        } )
 
 
 /// <summary>
