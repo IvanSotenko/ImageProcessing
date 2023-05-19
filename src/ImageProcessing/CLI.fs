@@ -2,43 +2,35 @@
 
 open Argu
 open ImageProcessing
+open Streaming
 
 exception NoTransformationsException of string
 
-type Direction =
-    | Left
-    | Right
+type Method =
+    | [<First; Unique; CliPrefix(CliPrefix.None)>] Seq
+    | [<First; Unique; CliPrefix(CliPrefix.None)>] Agent of ParseResults<AgentArgs>
+    | [<First; Unique; CliPrefix(CliPrefix.None)>] AgentParallel
 
+    interface IArgParserTemplate with
+        member s.Usage =
+            match s with
+            | Seq _ -> "Process images sequentially."
+            | Agent _ -> "Process the image using agents."
+            | AgentParallel _ -> "Process images using parallelism implemented using agents."
 
-type Filters =
-    | GaussianBlur
-    | Edges
-    | MotionBlur
-    | YSobel
-    | Emboss
-    | OutLine
-
-    member this.Kernel =
-        match this with
-        | GaussianBlur -> gaussianBlurKernel
-        | Edges -> edgesKernel
-        | MotionBlur -> motionBlurKernel
-        | YSobel -> ySobelKernel
-        | Emboss -> embossKernel
-        | OutLine -> outlineKernel
-
-
-type Arguments =
+and Arguments =
     | [<ExactlyOnce>] Path of pathIn: string * pathOut: string
-    | [<AltCommandLine("-fl")>] Filter of name: Filters
-    | [<AltCommandLine("-rt")>] Rotate90 of direction: Direction
+    | Filter of name: FilterKernel
+    | Rotate of direction: Direction
+    | [<Unique; AltCommandLine("-m")>] Method of ParseResults<Method>
+    | Logging
 
     interface IArgParserTemplate with
         member s.Usage =
             match s with
             | Path _ ->
-                "Specify the directory from which to take the images and the
-                         directory where to save the processed ones OR specify the path
-                         to the image to be processed and the path where to save the processed one."
+                "Specify the directory from which to take the images OR path to the image to be processed and the directory where to save the processed ones."
             | Filter _ -> "Specify filter to apply."
-            | Rotate90 _ -> "Specify the direction of rotation."
+            | Rotate _ -> "Specify the direction of rotation."
+            | Method _ -> "Specify the processing method."
+            | Logging _ -> "Enable logging of the image processing process."

@@ -1,5 +1,6 @@
 module ImageProcessing.ImageProcessing
 
+
 open System
 open Brahma.FSharp
 open SixLabors.ImageSharp
@@ -12,84 +13,105 @@ type Image =
     val Height: int
     val Name: string
 
-    new(data, width, height, name) =
+    new(data, height, width, name) =
         { Data = data
           Width = width
           Height = height
           Name = name }
 
-let loadAs2DArray (file: string) =
-    let img = Image.Load<L8> file
-    let res = Array2D.zeroCreate img.Height img.Width
+type Direction =
+    | Left
+    | Right
 
-    for i in 0 .. img.Width - 1 do
-        for j in 0 .. img.Height - 1 do
-            res[j, i] <- img.Item(i, j).PackedValue
 
-    res
+type FilterKernel =
+    | GaussianBlur
+    | Edges
+    | MotionBlur
+    | YSobel
+    | Emboss
+    | OutLine
 
-let loadAsImage (file: string) =
+    member this.Kernel =
+        match this with
+
+        | GaussianBlur ->
+            [| [| 1; 4; 6; 4; 1 |]
+               [| 4; 16; 24; 16; 4 |]
+               [| 6; 24; 36; 24; 6 |]
+               [| 4; 16; 24; 16; 4 |]
+               [| 1; 4; 6; 4; 1 |] |]
+            |> Array.map (Array.map (fun x -> (float32 x) / 256.0f))
+
+        | Edges ->
+            [| [| 0; 0; -1; 0; 0 |]
+               [| 0; 0; -1; 0; 0 |]
+               [| 0; 0; 2; 0; 0 |]
+               [| 0; 0; 0; 0; 0 |]
+               [| 0; 0; 0; 0; 0 |] |]
+            |> Array.map (Array.map float32)
+
+        | MotionBlur ->
+            (Array.init 9 (fun i -> Array.init 9 (fun j -> if i = j then 0.1 else 0.)))
+            |> Array.map (Array.map float32)
+
+        | YSobel ->
+            [| [| -1; 0; 1 |]; [| -2; 0; 2 |]; [| -1; 0; 1 |] |]
+            |> Array.map (Array.map (fun x -> (float32 x) / 6f))
+
+        | Emboss ->
+            [| [| -2; -1; 0 |]; [| -1; 1; 1 |]; [| 0; 1; 2 |] |]
+            |> Array.map (Array.map float32)
+
+        | OutLine ->
+            [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
+            |> Array.map (Array.map (fun x -> (float32 x) / 9f))
+
+
+let loadImage (file: string) =
     let img = Image.Load<L8> file
 
     let buf = Array.zeroCreate<byte> (img.Width * img.Height)
 
     img.CopyPixelDataTo(Span<byte> buf)
-    Image(buf, img.Width, img.Height, System.IO.Path.GetFileName file)
+    Image(buf, img.Height, img.Width, System.IO.Path.GetFileName file)
 
-let save2DByteArrayAsImage file (imageData: byte[,]) =
-    let h = imageData.GetLength 0
-    let w = imageData.GetLength 1
 
-    let flat2Darray array2D =
-        seq {
-            for x in [ 0 .. (Array2D.length1 array2D) - 1 ] do
-                for y in [ 0 .. (Array2D.length2 array2D) - 1 ] do
-                    yield array2D[x, y]
-        }
-        |> Array.ofSeq
-
-    let img = Image.LoadPixelData<L8>(flat2Darray imageData, w, h)
-    img.Save file
-
-let saveImage (image: Image) file =
+let saveImage file (image: Image) =
     let img = Image.LoadPixelData<L8>(image.Data, image.Width, image.Height)
     img.Save file
 
-let gaussianBlurKernel =
-    [| [| 1; 4; 6; 4; 1 |]
-       [| 4; 16; 24; 16; 4 |]
-       [| 6; 24; 36; 24; 6 |]
-       [| 4; 16; 24; 16; 4 |]
-       [| 1; 4; 6; 4; 1 |] |]
-    |> Array.map (Array.map (fun x -> (float32 x) / 256.0f))
 
-let edgesKernel =
-    [| [| 0; 0; -1; 0; 0 |]
-       [| 0; 0; -1; 0; 0 |]
-       [| 0; 0; 2; 0; 0 |]
-       [| 0; 0; 0; 0; 0 |]
-       [| 0; 0; 0; 0; 0 |] |]
-    |> Array.map (Array.map float32)
-
-let motionBlurKernel =
-    (Array.init 9 (fun i -> Array.init 10 (fun j -> if i = j then 0.1 else 0.)))
-    |> Array.map (Array.map float32)
-
-let ySobelKernel =
-    [| [| -1; 0; 1 |]; [| -2; 0; 2 |]; [| -1; 0; 1 |] |]
-    |> Array.map (Array.map (fun x -> (float32 x) / 6f))
+let allowedImageFormats =
+    Set.ofArray [| ".gif"; ".png"; ".webp"; ".pbm"; ".tiff"; ".bmp"; ".jpeg"; ".jpg"; ".tga" |]
 
 
-let embossKernel =
-    [| [| -2; -1; 0 |]; [| -1; 1; 1 |]; [| 0; 1; 2 |] |]
-    |> Array.map (Array.map float32)
+///  Gets all image files in a directory, or gets a single image file. Ignores all non-image files.
+let getImagePaths dir =
+    if System.IO.File.Exists dir then
+        Array.singleton dir
+    else
+        let files = System.IO.Directory.GetFiles dir
+
+        files
+        |> Array.filter (fun file -> allowedImageFormats.Contains(System.IO.Path.GetExtension file))
 
 
-let outlineKernel =
-    [| [| -1; -1; -1 |]; [| -1; 8; -1 |]; [| -1; -1; -1 |] |]
-    |> Array.map (Array.map (fun x -> (float32 x) / 9f))
+/// Return all images from directory or only one image by specified path
+let loadImages dir =
+    let imgFiles = getImagePaths dir
+    Array.map loadImage imgFiles
 
 
+let saveImages directory (images: Image[]) =
+    let save (image: Image) =
+        let newName = "proc_" + image.Name
+        saveImage (System.IO.Path.Combine(directory, newName)) image
+
+    Array.iter save images
+
+
+/// Checks if float[][] is square and has odd length
 let checkKernelFormat (kernel: float32[][]) =
     if (Array.isEmpty kernel) then
         Some(ArgumentException("The filter kernel is empty"))
@@ -105,57 +127,58 @@ let checkKernelFormat (kernel: float32[][]) =
             None
 
 
-let applyFilter (filter: float32[][]) (img: byte[,]) =
+let applyFilter (filter: float32[][]) (img: Image) =
 
     match checkKernelFormat filter with
     | Some exp -> raise exp
     | None -> ()
 
-    let imgH = img.GetLength 0
-    let imgW = img.GetLength 1
-
     let filterD = (Array.length filter) / 2
-
     let filter = Array.concat filter
 
-    let processPixel px py =
+    let processPixel pi =
+        let px = pi / img.Width
+        let py = pi % img.Width
+
         let dataToHandle =
             [| for i in px - filterD .. px + filterD do
                    for j in py - filterD .. py + filterD do
-                       if i < 0 || i >= imgH || j < 0 || j >= imgW then
-                           float32 img[px, py]
+                       if i < 0 || i >= img.Height || j < 0 || j >= img.Width then
+                           float32 img.Data[pi]
                        else
-                           float32 img[i, j] |]
+                           float32 img.Data[i * img.Width + j] |]
 
         Array.fold2 (fun s x y -> s + x * y) 0.0f filter dataToHandle
 
-    Array2D.mapi (fun x y _ -> byte (processPixel x y)) img
+    Image((Array.mapi (fun i _ -> byte (processPixel i)) img.Data), img.Height, img.Width, img.Name)
 
 
-let rotate90 (img: byte[,]) (clockwise: bool) =
+let rotate90 (direction: Direction) (img: Image) =
 
-    let imgH = img.GetLength 0
-    let imgW = img.GetLength 1
-    let zeroArr2d = Array2D.zeroCreate imgW imgH
+    let zeroArr = Array.zeroCreate img.Data.Length
 
-    let mapping x y _ =
-        if clockwise then
-            img[imgH - y - 1, x]
-        else
-            img[y, imgW - x - 1]
+    let mapping i _ =
+        match direction with
+        | Right -> img.Data[(img.Height - (i % img.Height) - 1) * img.Width + (i / img.Height)]
+        | Left -> img.Data[(i % img.Height) * img.Width + (img.Width - (i / img.Height) - 1)]
 
-    Array2D.mapi mapping zeroArr2d
+    Image((Array.mapi mapping zeroArr), img.Width, img.Height, img.Name)
 
 
-let loadAs2DArrayFromDirectory directory =
-    let files = System.IO.Directory.GetFiles directory
-    (Array.map loadAs2DArray files), files
+let processImagesSequentially pathIn pathOut applicators =
 
-let save2DByteArrayAsImageMany directoryIn (names: string[]) (images: byte[,][]) =
-    let save i image =
-        save2DByteArrayAsImage (System.IO.Path.Combine(directoryIn, names[i])) image
+    let images = loadImages pathIn
 
-    Array.iteri save images
+    let applyAll (image: Image) =
+        Logging.logger.Log($"Main thread: processing image {image.Name}")
+        let result = List.fold (fun img applicator -> applicator img) image applicators
+        Logging.logger.Log($"Main thread: processing of the image {image.Name} is completed")
+        result
+
+    let processedImages = images |> Array.map applyAll
+
+    saveImages pathOut processedImages
+    processedImages.Length
 
 
 let applyFilterGPUKernel (clContext: ClContext) localWorkSize =
