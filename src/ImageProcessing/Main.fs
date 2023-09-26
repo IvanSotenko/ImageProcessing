@@ -87,6 +87,8 @@ module Main =
                 | AgentParallel -> processImagesParallelUsingAgents pathIn pathOut applicators
 
         finalMessage imgCount
-        logger.Finish()
+
+        if results.Contains Logging then
+            logger.Finish()
 
         0
